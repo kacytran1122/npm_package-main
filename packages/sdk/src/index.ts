@@ -1,7 +1,7 @@
 /**
  * selakata: internationalization built for Southeast Asia.
  *
- * Covers 12 countries and 27 locales, including the things generic i18n
+ * Covers 12 countries and 29 locales, including the things generic i18n
  * libraries leave to the application: numeral classifiers, politeness that
  * varies with the speaker's gender, Buddhist Era dates, Zawgyi detection,
  * line breaking for unspaced scripts, and names without surnames.

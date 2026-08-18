@@ -194,7 +194,7 @@ on top of it, and it is the reason the SDK works on Hermes and inside
 held-out data against `Intl.Segmenter`'s 93.5**, and it returns the same answer
 on every runtime, where `Intl.Segmenter` changed its answer on 8.6% of the
 corpus between ICU 76 and ICU 78. The full evaluation, including where it
-loses, is in [`docs/segmentation.md`](docs/segmentation.md).
+loses, is in [`docs/segmentation.md`](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/docs/segmentation.md).
 
 Two knobs:
 
@@ -409,7 +409,7 @@ them is correct and reimplementing them could only introduce drift.
 rather than a lookup, and because the platform's answer is unavailable on some
 targets and version-dependent on the rest. It is evaluated against a
 hand-annotated corpus with a held-out split; the numbers, the method, and the
-limitations are in [`docs/segmentation.md`](docs/segmentation.md).
+limitations are in [`docs/segmentation.md`](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/docs/segmentation.md).
 
 **Curated.** Classifier tables, pronouns, and politeness particles are compiled
 by hand. They cover common usage. They are not a full grammar, and a native
