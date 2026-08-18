@@ -76,7 +76,8 @@ const columns = [
   .foot {
     border-top: 1px solid var(--seam);
     padding-block: 64px 28px;
-    background: var(--void);
+    /* Deliberately transparent: the ambient layer runs behind the footer the
+       same way it runs behind every other section. */
   }
 
   .foot__top {

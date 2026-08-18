@@ -1,0 +1,134 @@
+---
+/**
+ * The ambient background.
+ *
+ * A bilingual dictionary under a moving light — the subject of the whole
+ * package, sitting behind it. It is deliberately far back: about a sixth
+ * opacity, desaturated, and under a scrim, so it reads as texture rather than
+ * content. Panels, tables, and code blocks stay opaque, so the video only ever
+ * shows in the gaps between them and never behind a paragraph.
+ *
+ * Rules it has to obey:
+ *   - No sound, no controls, no user gesture required. `muted` + `playsinline`
+ *     is what lets iOS autoplay at all.
+ *   - `prefers-reduced-motion` gets the poster frame and nothing moving.
+ *   - `prefers-reduced-data` gets the poster too — 2.9 MB is not worth spending
+ *     on decoration for someone who asked us not to.
+ *   - `aria-hidden`, and never in the tab order. It carries no information.
+ */
+---
+
+<div class="ambient" aria-hidden="true">
+  <video
+    class="ambient__video"
+    autoplay
+    muted
+    loop
+    playsinline
+    disablepictureinpicture
+    preload="metadata"
+    tabindex="-1"
+    poster="/media/dictionary-poster.jpg"
+  >
+    <source src="/media/dictionary-loop.mp4" type="video/mp4" />
+  </video>
+  <div class="ambient__scrim"></div>
+</div>
+
+<script is:inline>
+  // CSS can hide the element, but only script can stop it decoding frames.
+  (() => {
+    const quiet = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const thrifty = window.matchMedia("(prefers-reduced-data: reduce)");
+    const video = document.querySelector(".ambient__video");
+    if (!video) return;
+
+    const apply = () => {
+      if (quiet.matches || thrifty.matches) {
+        video.pause();
+        video.removeAttribute("autoplay");
+      } else if (video.paused) {
+        video.play().catch(() => {
+          /* Autoplay refused. The poster stands in; nothing else to do. */
+        });
+      }
+    };
+
+    apply();
+    quiet.addEventListener("change", apply);
+    thrifty.addEventListener("change", apply);
+  })();
+</script>
+
+<style>
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background: var(--void);
+  }
+
+  .ambient__video,
+  .ambient {
+    /* The poster carries the same framing, so a paused or refused video looks
+       identical to a still one. */
+    background-position: center;
+    background-size: cover;
+  }
+
+  .ambient__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Present, not decorative-only: you should be able to tell it is a book.
+       Saturation is pulled down so the warm paper does not drag the palette
+       towards sepia, and contrast is pulled *down* rather than up so the bright
+       page never blows out into a hotspot under a line of text. */
+    opacity: 0.36;
+    filter: saturate(0.42) contrast(0.86) brightness(0.7);
+  }
+
+  /*
+   * Two scrims in one layer. The linear pass keeps the top of the viewport
+   * lighter, where the hero has room to breathe, and settles to near-solid
+   * lower down where body copy lives. The radial pass pulls the corners in so
+   * the bright page edges of the book never sit under a line of text.
+   */
+  .ambient__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        120% 85% at 62% 8%,
+        rgb(10 12 11 / 12%) 0%,
+        rgb(10 12 11 / 46%) 52%,
+        rgb(10 12 11 / 74%) 100%
+      ),
+      linear-gradient(
+        to bottom,
+        rgb(10 12 11 / 14%) 0%,
+        rgb(10 12 11 / 40%) 48%,
+        rgb(10 12 11 / 66%) 100%
+      );
+  }
+
+  @media (prefers-reduced-motion: reduce), (prefers-reduced-data: reduce) {
+    .ambient__video {
+      display: none;
+    }
+
+    .ambient {
+      background-image: url("/media/dictionary-poster.jpg");
+    }
+
+    /* Nothing dims the still, so the scrim has to do all of it. */
+    .ambient::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgb(10 12 11 / 84%);
+    }
+  }
+</style>

@@ -21,10 +21,13 @@
   --raised: #101413;
   --raised-2: #151a18;
   --text: #e9eeeb;
-  --muted: #8b9793;
-  /* 4.9:1 on --void and 4.7:1 on --raised. It carries eyebrows, table headers,
-     and captions, all of which are small text, so it has to clear AA. */
-  --faint: #78827e;
+  /* Lifted for the ambient layer: measured 4.8:1 against the brightest pixel
+     the video produces, where the old value fell to 4.25:1. */
+  --muted: #96a19d;
+  /* Carries eyebrows, table headers, and captions — all small text, so it has
+     to clear AA against the brightest ground the ambient video produces, not
+     just against --void. Measured 4.7:1 there. */
+  --faint: #949e9a;
 
   --jade: #2fd3b4;
   --jade-dim: #1b7f6d;
@@ -92,6 +95,19 @@ img,
 svg {
   max-width: 100%;
   display: block;
+}
+
+/*
+ * The ambient video sits at z-index 0 over the body background. Everything the
+ * reader interacts with is lifted above it — the video never intercepts a
+ * click, and nothing it does can affect layout.
+ */
+body > header,
+body > main,
+body > footer,
+body > .skip {
+  position: relative;
+  z-index: 1;
 }
 
 a {
@@ -200,6 +216,19 @@ pre {
   position: relative;
 }
 
+/*
+ * Surfaces that carry text stay opaque over the video. The reason the ambient
+ * layer is safe at all is that it only ever shows in the gaps.
+ */
+.panel,
+.table-wrap,
+.code {
+  /* The panels are nearly opaque, so this is only softening the few percent of
+     video that shows through — enough to stop page text behind a card being
+     legible through it. */
+  backdrop-filter: blur(6px);
+}
+
 .section--flush {
   border-top: 0;
 }
@@ -221,7 +250,7 @@ pre {
  * structure.
  */
 .panel {
-  background: var(--raised);
+  background: color-mix(in srgb, var(--raised) 92%, transparent);
   border: 1px solid var(--seam);
   border-radius: var(--radius);
   padding: 26px;
@@ -367,7 +396,7 @@ pre {
   overflow-x: auto;
   border: 1px solid var(--seam);
   border-radius: var(--radius);
-  background: var(--raised);
+  background: color-mix(in srgb, var(--raised) 94%, transparent);
 }
 
 table {

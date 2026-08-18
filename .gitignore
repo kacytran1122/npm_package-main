@@ -4,3 +4,8 @@ dist
 *.log
 .DS_Store
 *.tsbuildinfo
+
+# Source footage for the site background. The web-sized encode that actually
+# ships lives at packages/site/public/media/. Keeping the 93 MB master out of
+# git keeps the clone small; it is not needed to build anything.
+/npm.mp4
