@@ -1,8 +1,0 @@
-src
-test
-bench
-docs
-scripts
-tsconfig*.json
-tsup.config.ts
-.github
