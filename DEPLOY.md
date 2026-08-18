@@ -11,7 +11,7 @@ Self-hosting guide for the server and dashboard. If you only use the SDK, you do
 ## First deploy
 
 ```bash
-git clone https://github.com/kacytran1122/selakata.git selakata
+git clone https://github.com/kacytran1122/npm_package-main.git selakata
 cd selakata
 
 cp .env.example .env

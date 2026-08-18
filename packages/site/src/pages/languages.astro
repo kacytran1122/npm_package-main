@@ -46,35 +46,34 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
 
 <Base
   title="Languages — selakata"
-  description="All 29 locales across 12 Southeast Asian countries: script, direction, calendar, currency, numbering system, and fallback chain."
+  description="All 29 languages across 12 Southeast Asian countries: writing system, reading direction, calendar, currency, and what to fall back to."
 >
   <section class="section section--flush head">
     <div class="shell">
-      <p class="eyebrow">{LOCALE_CODES.length} locales · {countries.length} countries</p>
-      <h1>Every locale, and what makes it different</h1>
+      <p class="eyebrow">{LOCALE_CODES.length} languages · {countries.length} countries</p>
+      <h1>Every language, and what makes it different</h1>
       <p class="lede">
-        Southeast Asia is usually counted as eleven sovereign states. Papua New
-        Guinea is the twelfth here because it shares a land border with Indonesia
-        and holds ASEAN observer status. If your definition excludes it, ignore
-        the PG rows.
+        Southeast Asia usually means eleven countries. We include Papua New Guinea
+        as a twelfth because it shares a border with Indonesia and sits in on ASEAN
+        meetings. If you disagree, ignore the PG rows.
       </p>
 
       <dl class="facts">
         <div>
           <dd>{unspaced.length}</dd>
-          <dt>Written without spaces</dt>
+          <dt>Have no spaces</dt>
         </div>
         <div>
           <dd>{rtl.length}</dd>
-          <dt>Right to left</dt>
+          <dt>Read right to left</dt>
         </div>
         <div>
           <dd>{buddhist.length}</dd>
-          <dt>Buddhist Era calendar</dt>
+          <dt>Use a different calendar</dt>
         </div>
         <div>
           <dd>{mixed.length}</dd>
-          <dt>Code-mixed varieties</dt>
+          <dt>Are mixed languages</dt>
         </div>
       </dl>
     </div>
@@ -83,13 +82,13 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">The registry</p>
-        <h2>All {LOCALE_CODES.length} locales</h2>
+        <p class="eyebrow">The full list</p>
+        <h2>All {LOCALE_CODES.length} languages</h2>
         <p class="lede">
-          The fallback chain is the column worth reading twice. A Javanese
-          speaker gets Indonesian before English; Lao falls back to Thai; Cebuano
-          to Filipino. Falling straight to English is a choice, and usually the
-          wrong one.
+          The last column is the one worth reading twice. If a translation is
+          missing, this is what gets shown instead. A Javanese speaker sees
+          Indonesian before English. Lao falls back to Thai, Cebuano to Filipino.
+          Jumping straight to English is a choice, and usually the wrong one.
         </p>
       </div>
 
@@ -99,11 +98,11 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
             <tr>
               <th scope="col">Code</th>
               <th scope="col">Language</th>
-              <th scope="col">Script</th>
-              <th scope="col">Dir</th>
+              <th scope="col">Writing system</th>
+              <th scope="col">Reads</th>
               <th scope="col">Calendar</th>
-              <th scope="col">Currency</th>
-              <th scope="col">Fallback chain</th>
+              <th scope="col">Money</th>
+              <th scope="col">Falls back to</th>
             </tr>
           </thead>
           <tbody>
@@ -131,7 +130,7 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
                     <td>
                       {l.dir === "rtl" ? <span class="pill pill--warn">rtl</span> : "ltr"}
                     </td>
-                    <td>{l.calendar === "buddhist" ? "Buddhist Era" : "Gregorian"}</td>
+                    <td>{l.calendar === "buddhist" ? "Thai (Buddhist)" : "Standard"}</td>
                     <td><code>{l.defaultCurrency}</code></td>
                     <td class="chain">
                       {fallbackChain(code).map((step, i) => (
@@ -155,12 +154,12 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">Formatting</p>
-        <h2>The same date and the same price, everywhere</h2>
+        <h2>One date and one price, written 24 ways</h2>
         <p class="lede">
-          One value, formatted for each locale by <code>formatDate()</code> and
-          <code>formatCurrency()</code>. Thai reads 2569 because Thailand uses the
-          Buddhist Era, and the dong, rupiah, riel, kip, and kyat carry no
-          decimals because nobody quotes them with any.
+          The same two values, run through <code>formatDate()</code> and
+          <code>formatCurrency()</code> for each language. Thai says 2569 because
+          Thailand counts years differently. The dong, rupiah, riel, kip, and kyat
+          show no cents, because nobody writes them with any.
         </p>
       </div>
 
@@ -168,10 +167,10 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
         <table>
           <thead>
             <tr>
-              <th scope="col">Locale</th>
+              <th scope="col">Language</th>
               <th scope="col">18 August 2026</th>
-              <th scope="col">Native digits</th>
-              <th scope="col">1,500,000 in local currency</th>
+              <th scope="col">In local numerals</th>
+              <th scope="col">1,500,000 in local money</th>
             </tr>
           </thead>
           <tbody>
@@ -207,11 +206,12 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">By country</p>
-        <h2>What to offer, and what to default to</h2>
+        <h2>Which languages to offer, and which to pick first</h2>
         <p class="lede">
-          A phone bought in Cambodia often reports <code>en-US</code> while its
-          owner reads Khmer, so <code>localeFromRequest()</code> lets the country
-          beat <code>Accept-Language</code>. These are the lists it draws on.
+          A phone bought in Cambodia often says its language is
+          <code>en-US</code>, even though its owner reads Khmer. So
+          <code>localeFromRequest()</code> trusts the country over the phone's
+          setting. These are the lists it uses.
         </p>
       </div>
 
@@ -253,36 +253,37 @@ const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">Corrections welcome</p>
-        <h2>Some of this is exact and some is curated</h2>
+        <h2>How much you can trust each part</h2>
       </div>
       <div class="grid grid--3">
         <article class="panel">
           <h3>Exact</h3>
           <p class="muted">
-            Locale metadata, currencies, calendars, plural rules, and Vietnamese
-            normalization sit on CLDR and <code>Intl</code>. Lookups with a
-            published right answer.
+            Language settings, currencies, calendars, plural rules, and Vietnamese
+            spelling come from CLDR, the standard data built into every browser.
+            These have one correct answer and we use it.
           </p>
         </article>
         <article class="panel">
           <h3>Measured</h3>
           <p class="muted">
-            Segmentation is the package's own, evaluated against a hand-annotated
-            corpus with a held-out split. <a href="/benchmarks/">See the numbers</a>.
+            Splitting text into words is our own code. We tested it against
+            sentences we marked up by hand.
+            <a href="/benchmarks/">See the numbers</a>.
           </p>
         </article>
         <article class="panel">
-          <h3>Curated</h3>
+          <h3>Hand-made</h3>
           <p class="muted">
-            Classifier tables, pronouns, and politeness particles are compiled by
-            hand. They cover common usage. They are not a full grammar, and a
-            native reviewer should still check your copy.
+            The counting words, pronouns, and polite words were typed in by hand.
+            They cover everyday usage. They are not a complete grammar, so have a
+            native speaker read your final text.
           </p>
         </article>
       </div>
       <p class="foot-note">
-        Corrections in any of the {LOCALE_CODES.length} locales are treated as bugs.
-        <a href="https://github.com/kacytran1122/selakata/issues/new" rel="noopener">
+        Found a mistake in any of the {LOCALE_CODES.length} languages? That is a bug.
+        <a href="https://github.com/kacytran1122/npm_package-main/issues/new" rel="noopener">
           Open an issue →
         </a>
       </p>

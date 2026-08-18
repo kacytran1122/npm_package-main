@@ -128,11 +128,11 @@ export default function SeamInspector() {
           <dd>{parts.length}</dd>
         </div>
         <div>
-          <dt>Characters</dt>
+          <dt>Letters</dt>
           <dd>{chars}</dd>
         </div>
         <div>
-          <dt>Spaces in the source</dt>
+          <dt>Spaces in the text</dt>
           <dd className="readout__zero">0</dd>
         </div>
       </dl>

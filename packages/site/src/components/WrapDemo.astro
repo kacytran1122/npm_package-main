@@ -28,28 +28,28 @@ const count = wordCount(SAMPLE.text, SAMPLE.locale);
   <figure class="wrap__col wrap__col--bad">
     <figcaption>
       <span class="wrap__tag">Without</span>
-      <span class="wrap__meta">0 break opportunities</span>
+      <span class="wrap__meta">nowhere to wrap</span>
     </figcaption>
     <div class="wrap__box">
       <p lang={SAMPLE.locale} class="wrap__text">{SAMPLE.text}</p>
     </div>
     <p class="wrap__foot">
-      One unbreakable run. The text leaves the card, and on a phone it takes the
-      layout with it.
+      One long unbroken run. The text walks out of the card, and on a phone it
+      drags the rest of the layout with it.
     </p>
   </figure>
 
   <figure class="wrap__col wrap__col--good">
     <figcaption>
       <span class="wrap__tag wrap__tag--on">With</span>
-      <span class="wrap__meta">{breaks} break opportunities</span>
+      <span class="wrap__meta">{breaks} places to wrap</span>
     </figcaption>
     <div class="wrap__box">
       <p lang={SAMPLE.locale} class="wrap__text">{fixed}</p>
     </div>
     <p class="wrap__foot">
-      A zero-width space at each of the {breaks} boundaries between its {count}
-      words. Invisible, and it survives copy and paste.
+      An invisible marker sits at each of the {breaks} gaps between its {count}
+      words. You cannot see them, and they survive copy and paste.
     </p>
   </figure>
 </div>

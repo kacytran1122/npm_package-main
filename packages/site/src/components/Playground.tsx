@@ -28,10 +28,10 @@ import {
 type Tab = "count" | "polite" | "money" | "encoding";
 
 const TABS: { id: Tab; label: string; blurb: string }[] = [
-  { id: "count", label: "Counting", blurb: "You cannot say “2 cats” here." },
-  { id: "polite", label: "Politeness", blurb: "The speaker's gender is in the grammar." },
-  { id: "money", label: "Money and dates", blurb: "Thailand is in the year 2569." },
-  { id: "encoding", label: "Burmese encoding", blurb: "Two encodings, one code block." },
+  { id: "count", label: "Counting", blurb: "You cannot just say “2 cats” here." },
+  { id: "polite", label: "Politeness", blurb: "Who is speaking changes the words." },
+  { id: "money", label: "Money and dates", blurb: "In Thailand the year is 2569." },
+  { id: "encoding", label: "Burmese text", blurb: "Two formats that look the same." },
 ];
 
 const COUNT_LOCALES = ["vi", "th", "km", "lo", "my", "id", "ms", "fil", "zh-Hans-SG"];
@@ -287,12 +287,14 @@ function CountDemo() {
 
       <div className="out">
         <div className="out__row">
-          <span className="out__label">Interpolated</span>
+          <span className="out__label">Plain string</span>
           <span className="out__value out__bad" lang={locale}>
             {count} {noun}
           </span>
           <span className="out__note">
-            {needed ? "Ungrammatical. This is what `${count} ${noun}` produces." : "Fine here."}
+            {needed
+              ? "Wrong. This is what you get from plain string interpolation."
+              : "Fine in this language."}
           </span>
         </div>
         <div className="out__row">
@@ -302,14 +304,14 @@ function CountDemo() {
           </span>
         </div>
         <div className="out__row">
-          <span className="out__label">Classifier</span>
+          <span className="out__label">Counting word</span>
           <span className="out__value--sm" lang={locale}>
             {classifier ?? "—"}
           </span>
           <span className="out__note">
             {needed
               ? `Word order: ${def?.countOrder}`
-              : "This language counts without a classifier."}
+              : "This language counts without an extra word."}
           </span>
         </div>
       </div>
@@ -382,14 +384,14 @@ function PoliteDemo() {
           </span>
         </div>
         <div className="out__row">
-          <span className="out__label">Particle</span>
+          <span className="out__label">Polite word</span>
           <span className="out__value--sm" lang={locale}>
             {politeParticle(locale, { speakerGender: gender }) ?? "—"}
           </span>
           <span className="out__note">
             {gendered
-              ? "Changes with the speaker's gender."
-              : "Not gendered in this language."}
+              ? "Changes depending on who is speaking."
+              : "Does not change in this language."}
           </span>
         </div>
         <div className="out__row">
@@ -409,9 +411,9 @@ function PoliteDemo() {
 
       {gendered && (
         <p className="callout">
-          Hardcode <code>ครับ</code> and your product speaks as a man to every user
-          forever. It is the single most common giveaway that Thai copy was written
-          by someone who does not speak Thai.
+          Hard-code <code>ครับ</code> and your app sounds like a man talking, to
+          every user, forever. It is the most common sign that Thai text was
+          written by someone who does not speak Thai.
         </p>
       )}
     </>
@@ -459,9 +461,9 @@ function MoneyDemo() {
 
       <div className="out">
         <div className="out__row">
-          <span className="out__label">en-US formatting</span>
+          <span className="out__label">US formatting</span>
           <span className="out__value out__bad">{naive}</span>
-          <span className="out__note">Phantom decimals on a whole-unit currency.</span>
+          <span className="out__note">Cents on a currency that has none.</span>
         </div>
         <div className="out__row">
           <span className="out__label">formatCurrency()</span>
@@ -476,8 +478,8 @@ function MoneyDemo() {
           </span>
           <span className="out__note">
             {def?.calendar === "buddhist"
-              ? `Buddhist Era — ${toBuddhistYear(2026)}, not 2026`
-              : "Gregorian"}
+              ? `Thai calendar — ${toBuddhistYear(2026)}, not 2026`
+              : "Standard calendar"}
           </span>
         </div>
         <div className="out__row">
@@ -503,7 +505,7 @@ function EncodingDemo() {
     <>
       <div className="pg__controls">
         <label className="field">
-          <span>Burmese input</span>
+          <span>Type some Burmese</span>
           <textarea
             rows={2}
             value={text}
@@ -516,7 +518,7 @@ function EncodingDemo() {
 
       <div className="out">
         <div className="out__row">
-          <span className="out__label">Detected</span>
+          <span className="out__label">Format found</span>
           <span
             className={
               detect.encoding === "zawgyi"
@@ -531,7 +533,7 @@ function EncodingDemo() {
           </span>
         </div>
         <div className="out__row">
-          <span className="out__label">Signals</span>
+          <span className="out__label">Why</span>
           <span className="out__note">
             {detect.signals.length > 0 ? detect.signals.join(" · ") : "none"}
           </span>
@@ -545,10 +547,10 @@ function EncodingDemo() {
       </div>
 
       <p className="callout">
-        Zawgyi and Unicode share the same code block and disagree about what the
-        code points mean. In the wrong font they look identical; in the right one
-        they are noise. A large share of Burmese text on the open web is still
-        Zawgyi, so imports have to be guarded.
+        Burmese is stored in two different formats. They use the same numbers to
+        mean different letters. In the wrong font they look identical; in the
+        right one, one of them is nonsense. A lot of Burmese text on the web is
+        still in the old format, so check it as it comes in.
       </p>
     </>
   );

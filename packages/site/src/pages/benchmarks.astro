@@ -52,35 +52,35 @@ const num = (n: number) => n.toLocaleString("en-US");
 ---
 
 <Base
-  title="Segmentation benchmarks — selakata"
-  description="Why selakata does not use Intl.Segmenter, measured: boundary F1 against a held-out corpus, illegal cut points, cross-ICU determinism, throughput, and bundle size."
+  title="How we tested it — selakata"
+  description="Why we wrote our own word splitter instead of using the browser's: accuracy against hand-marked sentences, where each one cuts text wrongly, whether the answer changes between versions, speed, and download size."
 >
   <section class="section section--flush head">
     <div class="shell">
       <p class="eyebrow">Evaluation · {RUNTIME}</p>
-      <h1>Why this package does not use <code class="h-code">Intl.Segmenter</code></h1>
+      <h1>Why we wrote our own word splitter</h1>
       <p class="lede">
-        Word breaking is the load-bearing decision in this library, and until
-        recently it was delegated to the platform. That is the obvious move and
-        it is what every JavaScript i18n library does. It is also wrong here, for
-        reasons that are measurable rather than aesthetic.
+        Everything in this library depends on knowing where one word ends and the
+        next begins. Browsers have a built-in tool for this, and using it is the
+        obvious move — it is what every other translation library does. It turns
+        out to be the wrong move here, for reasons we could measure.
       </p>
       <p class="lede">
-        Three implementations of the same interface were built and measured on
-        identical data. This page is the result; the method, the corpus, and the
-        limitations are in the repository.
+        We built three versions and tested all three on the same sentences. This
+        page shows what we found. The method, the test sentences, and the
+        weaknesses are all in the repository.
       </p>
 
       <div class="head__cta">
         <a
           class="btn btn--ghost"
-          href="https://github.com/kacytran1122/selakata/blob/main/packages/sdk/docs/segmentation.md"
-          rel="noopener">Full writeup</a
+          href="https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/docs/segmentation.md"
+          rel="noopener">Read the full writeup</a
         >
         <a
           class="btn btn--ghost"
-          href="https://github.com/kacytran1122/selakata/blob/main/packages/sdk/bench/data/corpus.json"
-          rel="noopener">Annotated corpus</a
+          href="https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/bench/data/corpus.json"
+          rel="noopener">See the test sentences</a
         >
       </div>
     </div>
@@ -90,36 +90,37 @@ const num = (n: number) => n.toLocaleString("en-US");
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">What was compared</p>
-        <h2>Three approaches, one interface</h2>
+        <p class="eyebrow">What we compared</p>
+        <h2>Three ways to do the same job</h2>
       </div>
 
       <div class="grid grid--3">
         <article class="panel approach">
           <span class="approach__key">A</span>
-          <h3>Intl.Segmenter</h3>
+          <h3>The browser's own</h3>
           <p class="muted">
-            Delegate to the host's ICU. The previous behaviour and the baseline.
-            It lives in the benchmark harness, not in the package — shipping it
-            would put the dependency back.
+            Let the browser do it. This is what we used before, and it is what we
+            are comparing against. It only exists in our test code now — shipping
+            it would bring the problem back.
           </p>
         </article>
         <article class="panel approach">
           <span class="approach__key">B</span>
-          <h3>Orthographic rules</h3>
+          <h3>Spelling rules only</h3>
           <p class="muted">
-            UAX #29 grapheme clusters implemented from the rule set, then
-            tailored per script: Thai and Lao leading vowels attach rightwards,
-            Khmer coeng stacks hold, Burmese asat marks a coda. No data at all.
+            Work out the safe cut points from how each script is written. Thai and
+            Lao write some vowels before the letter they belong to, Khmer stacks
+            letters on top of each other, and Burmese marks the end of a syllable.
+            No word list at all.
           </p>
         </article>
         <article class="panel approach approach--on">
           <span class="approach__key">C</span>
-          <h3>Lexical Viterbi</h3>
+          <h3>Rules plus a word list</h3>
           <p class="muted">
-            A unigram cost search over B's cluster lattice against a curated
-            lexicon, falling back to B for anything unrecognised. This is what
-            ships.
+            Take the safe cut points from B, then pick the split that best matches
+            a list of common words. Anything it does not recognise falls back to
+            B. This is the one we ship.
           </p>
         </article>
       </div>
@@ -131,12 +132,12 @@ const num = (n: number) => n.toLocaleString("en-US");
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">Accuracy</p>
-        <h2>Boundary F1 on held-out data</h2>
+        <h2>How often it finds the right word boundaries</h2>
         <p class="lede">
-          The corpus is hand-annotated and split in two. The lexicon was checked
-          against the dev half only — no entry was added because of a test
-          sentence, and no constant was tuned against one. These are the test-half
-          numbers.
+          We marked up the sentences by hand and split them into two halves. We
+          only ever looked at the first half while building the word list. Nothing
+          was added or tuned because of a sentence in the second half. These are
+          the second-half scores — the ones that count.
         </p>
       </div>
 
@@ -145,9 +146,9 @@ const num = (n: number) => n.toLocaleString("en-US");
           <thead>
             <tr>
               <th scope="col">Locale</th>
-              <th scope="col">A · Intl.Segmenter</th>
+              <th scope="col">A · the browser</th>
               <th scope="col">B · rules only</th>
-              <th scope="col">C · lexical</th>
+              <th scope="col">C · rules + word list</th>
             </tr>
           </thead>
           <tbody>
@@ -167,7 +168,7 @@ const num = (n: number) => n.toLocaleString("en-US");
               })
             }
             <tr class="total">
-              <th scope="row">Macro average</th>
+              <th scope="row">Average</th>
               <td>{pct(macro.intl)}</td>
               <td>{pct(macro.rules)}</td>
               <td class="win">{pct(macro.lexical)}</td>
@@ -177,12 +178,12 @@ const num = (n: number) => n.toLocaleString("en-US");
       </div>
 
       <p class="note">
-        Where C loses, it loses to Thai by 2.9 points, and the losses are compound
-        boundaries: ICU's Thai dictionary knows tens of thousands of words and
-        this lexicon knows 264. Where C wins it wins on recall, because ICU's
-        Khmer and Chinese dictionaries miss words a small well-chosen lexicon
-        happens to hold. <code>registerWords()</code> closes the Thai gap for any
-        specific application immediately.
+        C only loses on Thai, by 2.9 points, and it loses on compound words: the
+        browser's Thai dictionary holds tens of thousands of words and ours holds
+        264. Where C wins, it wins because the browser misses Khmer and Chinese
+        words that our small, well-chosen list happens to have. You can close the
+        Thai gap for your own app straight away with
+        <code>registerWords()</code>.
       </p>
     </div>
   </section>
@@ -191,29 +192,28 @@ const num = (n: number) => n.toLocaleString("en-US");
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Determinism</p>
-        <h2>The platform's answer moves with the host's ICU version</h2>
+        <p class="eyebrow">Consistency</p>
+        <h2>The browser gives different answers on different versions</h2>
         <p class="lede">
-          This is the finding that turns into a production bug rather than a
-          support-matrix footnote. The same 220 segmentations, run on Node 22 and
-          Node 24:
+          This is the finding that becomes a real bug, not just a footnote. The
+          same 220 sentences, split on two versions of Node:
         </p>
       </div>
 
       <div class="diff">
         <div class="diff__stat">
           <strong>19 / 220</strong>
-          <span>segmentations differ between ICU 76.1 and ICU 78.3</span>
+          <span>came out differently between the two versions</span>
         </div>
         <div class="diff__stat diff__stat--good">
           <strong>0 / 220</strong>
-          <span>differ with this package, across ICU 76, 77, and 78</span>
+          <span>differ with our version, across all three</span>
         </div>
       </div>
 
       <div class="sample">
         <p class="sample__label">
-          <code>ខ្ញុំស្រឡាញ់</code> — grapheme clusters, same code, same input
+          <code>ខ្ញុំស្រឡាញ់</code> — same code, same text, two answers
         </p>
         <div class="sample__row">
           <span class="sample__tag sample__tag--bad">ICU 76.1</span>
@@ -226,11 +226,12 @@ const num = (n: number) => n.toLocaleString("en-US");
       </div>
 
       <p class="note">
-        ICU 76 pulls the Khmer coeng stacks apart; ICU 78 does not. For an
-        application that renders on the server and hydrates in the browser, that
-        is an HTML mismatch on any string that was truncated or measured. It also
-        means a snapshot test passes on one CI runner and fails on another. This
-        package has no version-dependent data because it has no external data.
+        The older version pulls apart Khmer letters that are meant to stack
+        together. The newer one does not. If your app builds pages on the server
+        and then loads them in a browser, the two will disagree about any text you
+        shortened or measured, and React will complain. It also means a test can
+        pass on one machine and fail on another. Our version cannot drift like
+        this, because it does not depend on any outside data.
       </p>
     </div>
   </section>
@@ -239,19 +240,18 @@ const num = (n: number) => n.toLocaleString("en-US");
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Cut safety</p>
-        <h2>Where a truncation is allowed to land</h2>
+        <p class="eyebrow">Safe cutting</p>
+        <h2>Where you are allowed to cut text short</h2>
         <p class="lede">
-          <code>truncate()</code> and <code>graphemeLength()</code> cut at cluster
-          boundaries. UAX #29 is an encoding-level algorithm and deliberately says
-          nothing about orthography, so some of the boundaries it offers are
-          places no reader accepts a cut — a Thai leading vowel left dangling, a
-          Burmese syllable split from its coda.
+          When you shorten a label with <code>truncate()</code>, you have to cut
+          somewhere. The browser's rules are about how text is stored, not how it
+          is written, so some of the places it offers are places no reader would
+          accept — a Thai vowel left hanging on its own, or a Burmese syllable cut
+          in half.
         </p>
         <p class="lede">
-          Judged by a checker written from the Unicode properties, sharing no code
-          with the implementation, so a bug in the cluster rules cannot score
-          itself as correct.
+          We checked this with separate code that shares nothing with the
+          splitter, so a bug in one cannot mark its own homework.
         </p>
       </div>
 
@@ -260,11 +260,11 @@ const num = (n: number) => n.toLocaleString("en-US");
           <thead>
             <tr>
               <th scope="col">Locale</th>
-              <th scope="col">Offsets offered by Intl</th>
-              <th scope="col">Illegal</th>
+              <th scope="col">Cut points the browser offers</th>
+              <th scope="col">Unsafe</th>
               <th scope="col">Rate</th>
-              <th scope="col">This package</th>
-              <th scope="col">Most common reason</th>
+              <th scope="col">Ours</th>
+              <th scope="col">Usual reason</th>
             </tr>
           </thead>
           <tbody>
@@ -287,12 +287,13 @@ const num = (n: number) => n.toLocaleString("en-US");
       </div>
 
       <p class="note">
-        Khmer reads zero on ICU 78. On Node 20 and Node 22 the same table reports
-        44 illegal offsets, 17.7%, all of them coeng stacks coming apart — the
-        defect rate is a property of the runtime, not of the input.
-        <code>Intl.Segmenter</code>'s <em>word</em> boundaries, by contrast, are
-        legal everywhere. The problem is specific to grapheme granularity, and
-        grapheme granularity is what truncation uses.
+        Khmer shows zero here because this table was made on the newest version.
+        On Node 20 and Node 22 the same table shows 44 unsafe cut points, 17.7%,
+        all of them stacked Khmer letters coming apart. So the fault depends on
+        which machine you run it on, not on the text. To be fair to the browser:
+        its <em>word</em> boundaries are safe everywhere. The problem is only with
+        the finer, letter-level ones — which are exactly what shortening text
+        uses.
       </p>
     </div>
   </section>
@@ -302,31 +303,30 @@ const num = (n: number) => n.toLocaleString("en-US");
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">Availability</p>
-        <h2>On a host with no ICU there is nothing to delegate to</h2>
+        <h2>Sometimes the browser's version is not there at all</h2>
       </div>
 
       <div class="grid grid--3">
         <article class="panel avail avail--bad">
-          <h3>Intl.Segmenter</h3>
-          <p class="avail__verdict">Throws</p>
+          <h3>The browser's own</h3>
+          <p class="avail__verdict">Crashes</p>
           <p class="muted">
-            Absent on React Native's Hermes, on Node built with
-            <code>small-icu</code> or <code>--without-intl</code>, and on several
-            embedded and edge runtimes. No feature detect helps: the alternative
-            to a working segmenter was an exception.
+            Missing on React Native, on slimmed-down builds of Node, and on
+            several edge and embedded platforms. Checking for it first does not
+            help: without it there is simply nothing to fall back on.
           </p>
         </article>
         <article class="panel avail">
-          <h3>Rules only</h3>
+          <h3>Spelling rules only</h3>
           <p class="avail__verdict avail__verdict--ok">Works</p>
-          <p class="muted">No data, no platform dependency.</p>
+          <p class="muted">No outside data, nothing to be missing.</p>
         </article>
         <article class="panel avail">
-          <h3>Lexical</h3>
+          <h3>Rules + word list</h3>
           <p class="avail__verdict avail__verdict--ok">Works</p>
           <p class="muted">
-            The shipped default. Measured by deleting the global and re-running
-            the suite, which is a test in the package.
+            The one we ship. We check this by deleting the browser's version and
+            running the whole test suite again.
           </p>
         </article>
       </div>
@@ -337,17 +337,18 @@ const num = (n: number) => n.toLocaleString("en-US");
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Cost</p>
-        <h2>What it costs in time and in bytes</h2>
+        <p class="eyebrow">The cost</p>
+        <h2>What we gave up: speed and download size</h2>
         <p class="lede">
-          ICU is C++ and is roughly five to seven times faster. Delegating to it
-          also costs zero bytes. Both are real, and both are on the table here.
+          The browser's version is written in C++ and is about five to seven times
+          faster. It also costs nothing to download. Both of those are real
+          downsides, so here they are.
         </p>
       </div>
 
       <div class="cost">
         <div>
-          <h3 class="cost__title">Throughput, characters per millisecond</h3>
+          <h3 class="cost__title">Speed, letters per millisecond</h3>
           <div class="table-wrap">
             <table>
               <thead>
@@ -373,16 +374,16 @@ const num = (n: number) => n.toLocaleString("en-US");
             </table>
           </div>
           <p class="note">
-            In absolute terms C segments a 60-character interface string in about
-            16 microseconds and a 2,000-character paragraph in about half a
-            millisecond. For labels, buttons, and paragraphs at render time that
-            is not a number anyone can perceive. It would matter for bulk corpus
-            processing, which is not what an i18n SDK does.
+            In real terms: C splits a 60-letter button label in about 16
+            millionths of a second, and a 2,000-letter paragraph in about half a
+            thousandth. Nobody can notice that while a page is drawing. It would
+            matter if you were processing millions of documents, which is not what
+            this is for.
           </p>
         </div>
 
         <div>
-          <h3 class="cost__title">Bundle, minified and gzipped</h3>
+          <h3 class="cost__title">Download size, compressed</h3>
           <div class="table-wrap">
             <table>
               <thead>
@@ -408,16 +409,16 @@ const num = (n: number) => n.toLocaleString("en-US");
             </table>
           </div>
           <p class="note">
-            The lexicons are 7.7 KB gzipped of that, about 220 entries per
-            language. An application that only needs line breaking can drop them:
+            The word lists are 7.7 KB of that, roughly 220 words per language. If
+            you only need text to wrap properly, you can drop them:
           </p>
           <CodeBlock
             code={`import { setSegmentationEngine, orthographicEngine } from "selakata";
 
-// 2.3 KB gzipped instead of 10. Breaks and truncations stay
-// safe; word counts get coarse.
+// 2.3 KB instead of 10. Wrapping and shortening stay safe.
+// Word counts get rougher.
 setSegmentationEngine(orthographicEngine);`}
-            label="Trading accuracy for size"
+            label="Smaller, but less accurate"
           />
         </div>
       </div>
@@ -428,58 +429,59 @@ setSegmentationEngine(orthographicEngine);`}
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">The decision</p>
-        <h2>C ships, with B as a supported opt-out</h2>
+        <p class="eyebrow">What we chose</p>
+        <h2>We ship C, and you can switch to B</h2>
       </div>
 
       <ul class="reasons">
         <li>
-          <strong>More accurate than the baseline</strong> on held-out data, 96.9
-          against 93.5 macro F1, winning four locales of five.
+          <strong>More accurate than the browser</strong> on sentences it had
+          never seen: 96.9 against 93.5, winning four languages out of five.
         </li>
         <li>
-          <strong>Available</strong>, which the baseline is not on Hermes or any
-          ICU-less runtime.
+          <strong>Always there</strong>, which the browser's version is not on
+          React Native or any slimmed-down platform.
         </li>
         <li>
-          <strong>Deterministic.</strong> Identical output on ICU 76, 77, and 78,
-          where the baseline changed its answer on 8.6% of inputs. For a library
-          used in server rendering this is a correctness property, not a nicety.
+          <strong>Always the same answer.</strong> Identical on all three
+          versions we tried, where the browser changed its mind on 8.6% of
+          sentences. If your app renders on a server and then in a browser, that
+          is a correctness problem, not a nice-to-have.
         </li>
         <li>
-          <strong>Its cuts are always legal</strong>, where the baseline's grapheme
-          boundaries are illegal on 20% of Thai offsets, 23% of Lao, 47% of
-          Burmese, and — depending on the runtime — 18% of Khmer.
+          <strong>It never cuts text in a broken place</strong>, where the
+          browser's finer boundaries are unsafe on 20% of Thai, 23% of Lao, 47% of
+          Burmese, and — depending on the machine — 18% of Khmer.
         </li>
         <li>
-          <strong>Affordable.</strong> 10 KB gzipped and roughly 16 microseconds
-          per interface string.
+          <strong>Cheap enough.</strong> 10 KB to download, and about 16
+          millionths of a second per label.
         </li>
       </ul>
 
       <div class="limits">
-        <h3>What these numbers do not show</h3>
+        <h3>What these numbers do not tell you</h3>
         <ul>
           <li>
-            The corpus is 125 sentences across five languages, annotated by the
-            author against ordinary orthographic practice rather than a published
-            standard. Large enough to separate these approaches; too small to
-            publish as a ranking.
+            We used 125 sentences across five languages, marked up by the author
+            against ordinary writing practice rather than an official standard.
+            That is enough to tell these three apart. It is not enough to publish
+            as a league table.
           </li>
           <li>
-            Word segmentation in these languages has no single correct answer at
-            the margins. Thai compounds and Burmese particles are judgement calls.
-            The gap between approaches on identical data is the trustworthy part.
+            There is no single right answer at the edges. Thai compound words and
+            Burmese grammar words are judgement calls. What you can trust is the
+            gap between the three, since all three were judged the same way.
           </li>
           <li>
-            The lexicons are hand-curated and cover roughly 220 common forms per
-            language. They are not a dictionary.
+            The word lists were typed in by hand and hold about 220 common words
+            per language. They are not a dictionary.
           </li>
           <li>
-            <code>Intl.PluralRules</code>, <code>Intl.NumberFormat</code>, and
-            <code>Intl.DateTimeFormat</code> were deliberately kept. They are
-            CLDR-exact lookups, and their cross-version updates are a feature.
-            Segmentation is a judgement, which is why it moved in-house.
+            We kept the browser's tools for plurals, numbers, and dates on
+            purpose. Those have one published right answer, and when the browser
+            updates them, that is a fix arriving. Splitting words is a judgement
+            call, which is why that one is ours.
           </li>
         </ul>
       </div>

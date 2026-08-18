@@ -16,65 +16,65 @@ const codeMixed = LOCALE_CODES.filter((c) => LOCALES[c].codeMixed);
 
 const stats = [
   { value: String(countryCount), label: "Countries" },
-  { value: String(localeCount), label: "Locales" },
-  { value: String(unspacedCount), label: "Locales with no spaces" },
+  { value: String(localeCount), label: "Languages" },
+  { value: String(unspacedCount), label: "Languages with no spaces" },
   { value: "MIT", label: "Licence" },
 ];
 
 const comparison = [
-  { row: "Word and line breaking for Thai, Khmer, Lao, Burmese", them: false },
-  { row: "Numeral classifiers in counted phrases", them: false },
-  { row: "Politeness that varies with the speaker's gender", them: false },
+  { row: "Wrapping text that has no spaces", them: false },
+  { row: "Counting words, so numbers read correctly", them: false },
+  { row: "Politeness that changes with who is speaking", them: false },
   { row: "Javanese and Sundanese speech levels", them: false },
-  { row: "Buddhist Era dates by default for Thai", them: false },
-  { row: "Zawgyi detection and conversion", them: false },
-  { row: "Code-mixed locales as first-class tags", them: false },
-  { row: "Whole-unit currencies without phantom decimals", them: "partial" },
-  { row: "Script-aware font stacks and line heights", them: false },
-  { row: "Regional fallback chains before English", them: "partial" },
-  { row: "CLDR plural rules", them: true },
-  { row: "Message interpolation", them: true },
+  { row: "The Thai calendar, used automatically", them: false },
+  { row: "Finding and fixing broken Burmese text", them: false },
+  { row: "Singlish, Taglish and other mixed languages", them: false },
+  { row: "Currencies that should not show cents", them: "partial" },
+  { row: "The right font for each writing system", them: false },
+  { row: "Falling back to a nearby language, not English", them: "partial" },
+  { row: "Plural rules", them: true },
+  { row: "Putting values into text", them: true },
 ];
 
 const features = [
   {
-    title: "Line breaking that does not need ICU",
-    body: "Thai, Lao, Khmer, and Burmese give CSS nothing to wrap on. The segmenter is the package's own — deterministic across runtimes, and present on Hermes and small-icu builds where Intl.Segmenter simply is not.",
+    title: "Text that wraps instead of overflowing",
+    body: "Thai, Lao, Khmer, and Burmese have no spaces, so CSS has nowhere to start a new line. This works out where the words end and marks the safe spots. It runs on React Native too, where the browser's own version does not exist.",
     api: "insertLineBreakOpportunities()",
   },
   {
-    title: "Counted phrases with the right classifier",
-    body: "“2 mèo” is broken Vietnamese. You need a measure word, and its position moves between languages: Vietnamese puts it before the noun, Thai after.",
+    title: "Counting that reads correctly",
+    body: "“2 mèo” is broken Vietnamese. You need a counting word in the middle. Where it goes changes by language: Vietnamese puts it before the noun, Thai puts it after.",
     api: "formatCount()",
   },
   {
-    title: "Politeness that knows who is speaking",
-    body: "Thai sentence particles mark the speaker's gender. Hardcode ครับ and your product speaks as a man to every user, forever.",
+    title: "Politeness that fits the speaker",
+    body: "In Thai, the polite word at the end of a sentence changes depending on whether a man or a woman is speaking. Hard-code ครับ and your app sounds like a man talking, to everyone, forever.",
     api: "politeParticle()",
   },
   {
-    title: "Speech levels, not just formality",
-    body: "Javanese distinguishes ngoko, madya, and krama; Sundanese loma and lemes. Both map onto a portable three-step ladder so one key can carry all of them.",
+    title: "Speech levels, not just formal and casual",
+    body: "Javanese has three levels: ngoko, madya, and krama. Sundanese has loma and lemes. Both fit onto one simple three-step scale, so a single piece of text can hold all its versions.",
     api: "speechLevel()",
   },
   {
-    title: "Burmese in two incompatible encodings",
-    body: "Zawgyi and Unicode share a code block and disagree about what it means. Guard imports and repair legacy text before it reaches your database.",
+    title: "Burmese text that arrives broken",
+    body: "Burmese is stored in two different formats that look identical in the wrong font and turn to nonsense in the right one. Check text as it comes in, and repair the old format before it reaches your database.",
     api: "detectMyanmarEncoding()",
   },
   {
-    title: "Money and dates as the region writes them",
-    body: "The dong, rupiah, riel, kip, and kyat are quoted whole. Thai dates default to the Buddhist Era, because that is what every Thai form prints.",
+    title: "Money and dates written the local way",
+    body: "The dong, rupiah, riel, kip, and kyat never show cents, because nobody writes them that way. Thai dates use the Thai calendar, because that is what every Thai form prints.",
     api: "formatCurrency()",
   },
   {
-    title: "Names without a surname",
-    body: "Burmese names have no family name. Indonesian mononyms are legal. A required last-name field rejects valid legal identities.",
+    title: "Name fields that accept real names",
+    body: "Burmese names have no family name. Many Indonesians legally have just one name. A required last-name box turns those people away at sign-up.",
     api: "nameFields()",
   },
   {
-    title: "A linter for regional bugs",
-    body: "Catches missing classifiers, hardcoded gendered particles, English plural hacks, unbreakable strings, and placeholder drift — in CI, before review.",
+    title: "A checker for regional mistakes",
+    body: "Finds missing counting words, hard-coded polite words, English-style plurals, text that will overflow, and placeholders that do not match. It runs in your build, before anyone reviews it.",
     api: "lintBundle()",
   },
 ];
@@ -87,7 +87,7 @@ const install = [
   {
     runs: "No server",
     title: "Bundled",
-    body: "Local JSON, no account. The SDK has no runtime dependencies and never makes a network call.",
+    body: "Keep your text in a JSON file. No account, no other packages, and it never calls the internet.",
     code: `import th from "./locales/th.json";
 
 <I18nProvider
@@ -100,7 +100,7 @@ const install = [
   {
     runs: "Our server",
     title: "Hosted",
-    body: "Point the SDK at the API with a project key. Translators work in the dashboard; AI drafts wait for human review.",
+    body: "Give the library a project key and it fetches your text. Translators work in the dashboard, and AI drafts wait for a person to approve them.",
     code: `<I18nProvider
   locale="th"
   apiKey={env.SELAKATA_KEY}
@@ -112,7 +112,7 @@ const install = [
   {
     runs: "Your server",
     title: "Self-hosted",
-    body: "The API, MongoDB, and the dashboard behind one nginx. Your keys, your data, your region.",
+    body: "Run the API, the database, and the dashboard yourself. Your keys, your data, on your own servers.",
     code: `cp .env.example .env
 # JWT_SECRET: 32+ chars
 ./deploy.sh
@@ -139,30 +139,28 @@ function Checkout() {
 ---
 
 <Base
-  title="selakata — i18n built for Southeast Asia"
-  description="An i18n toolkit for Vietnamese, Thai, Indonesian, Malay, Filipino, Khmer, Burmese, Lao and more. Word breaking without ICU, numeral classifiers, speaker-aware politeness, Buddhist Era dates, and Zawgyi detection."
+  title="selakata — translation tools built for Southeast Asia"
+  description="A translation toolkit for Vietnamese, Thai, Indonesian, Malay, Filipino, Khmer, Burmese, Lao and more. Handles text that has no spaces, counting words, politeness levels, local calendars, and broken Burmese text."
 >
   <!-- ============================================================= hero -->
   <section class="hero">
     <div class="shell hero__grid">
       <div class="hero__copy">
-        <p class="eyebrow">12 countries · {localeCount} locales</p>
-        <h1>
-          The space<br />between words
-        </h1>
+        <p class="eyebrow">{countryCount} countries · {localeCount} languages</p>
+        <h1>Translation that works in Southeast Asia</h1>
         <p class="lede">
-          Most i18n libraries were designed around European grammar. They hand you
-          plural rules and date formats and assume the rest is a lookup table.
-          Southeast Asia breaks that assumption before you render your first
-          string — starting with the fact that four of its languages do not write
-          spaces at all.
+          Most translation libraries were built for European languages. They give
+          you plural rules and date formats, then assume the rest is swapping
+          words from a list. That falls apart here. Four of these languages do not
+          put spaces between words at all — so your text runs straight off the
+          screen.
         </p>
 
         <div class="hero__cta">
           <a class="btn btn--primary" href="#install">Get started</a>
           <a
             class="btn btn--ghost"
-            href="https://github.com/kacytran1122/selakata"
+            href="https://github.com/kacytran1122/npm_package-main"
             rel="noopener">View on GitHub</a
           >
         </div>
@@ -199,12 +197,13 @@ function Checkout() {
   <section class="section" id="problem">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Why a separate library</p>
-        <h2>Your text leaves the container before it reaches a translator</h2>
+        <p class="eyebrow">The main problem</p>
+        <h2>Your text runs off the edge of the screen</h2>
         <p class="lede">
-          This is not a polish item. A Khmer string with no break opportunity is a
-          layout bug that ships to every phone in the country, and no amount of
-          careful translation fixes it.
+          This is not a small styling issue. Khmer has no spaces, so the browser
+          cannot find anywhere to start a new line. The text just keeps going, past
+          the edge of the box, on every phone in the country. No amount of careful
+          translation fixes it.
         </p>
       </div>
 
@@ -220,9 +219,9 @@ const safe = insertLineBreakOpportunities(text, "km");`}
             label="The whole fix"
           />
           <p class="muted problem__note">
-            Prefer CSS <code>word-break: auto-phrase</code> where the browser
-            supports it. This exists for everywhere you cannot reach with CSS:
-            SVG text, canvas, PDF generation, and every email client.
+            If the browser supports <code>word-break: auto-phrase</code>, use that
+            instead. This is for everywhere CSS cannot reach: text inside images,
+            canvas drawings, generated PDFs, and email.
           </p>
         </div>
       </div>
@@ -233,12 +232,12 @@ const safe = insertLineBreakOpportunities(text, "km");`}
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Against i18next and react-intl</p>
-        <h2>What a generic library leaves to you</h2>
+        <p class="eyebrow">Compared with i18next and react-intl</p>
+        <h2>What you would have to build yourself</h2>
         <p class="lede">
-          The general-purpose libraries are good at the general-purpose parts, and
-          this list is not a criticism of them. It is a list of what you end up
-          writing yourself the first time you ship to this region.
+          The general-purpose libraries do the general-purpose parts well, and this
+          is not a complaint about them. It is a list of what you end up writing
+          yourself the first time you launch in this region.
         </p>
       </div>
 
@@ -260,7 +259,7 @@ const safe = insertLineBreakOpportunities(text, "km");`}
                     {c.them === true ? (
                       <span class="yes">Built in</span>
                     ) : c.them === "partial" ? (
-                      <span class="muted">Partial, via Intl</span>
+                      <span class="muted">Partly</span>
                     ) : (
                       <span class="no">You write it</span>
                     )}
@@ -280,7 +279,7 @@ const safe = insertLineBreakOpportunities(text, "km");`}
     <div class="shell">
       <div class="section-head">
         <p class="eyebrow">Features</p>
-        <h2>Everything the region actually needs</h2>
+        <h2>What it handles for you</h2>
       </div>
 
       <div class="grid grid--3">
@@ -301,11 +300,11 @@ const safe = insertLineBreakOpportunities(text, "km");`}
   <section class="section" id="playground">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Playground</p>
-        <h2>Four things that go wrong, running live</h2>
+        <p class="eyebrow">Try it</p>
+        <h2>Four things that go wrong. Change them and watch.</h2>
         <p class="lede">
-          Every value below is computed by the published package in your browser.
-          Nothing here is a screenshot.
+          Everything below is worked out by the real library, running in your
+          browser right now. None of it is a picture.
         </p>
       </div>
 
@@ -318,15 +317,15 @@ const safe = insertLineBreakOpportunities(text, "km");`}
     <div class="shell code-split">
       <div>
         <p class="eyebrow">React</p>
-        <h2>One provider, then get out of the way</h2>
+        <h2>Set it up once, then forget about it</h2>
         <p class="lede" style="margin-top:16px">
-          <code>useTranslation()</code> returns the formatters already bound to the
-          active locale and the speaker you configured, so a component never has to
-          know which country it is rendering for.
+          <code>useTranslation()</code> hands you tools that already know the
+          current language and who is speaking. Your components never need to check
+          which country they are rendering for.
         </p>
         <p class="lede" style="margin-top:16px">
-          Server components import from <code>selakata/server</code>, which excludes
-          React context and every browser-only path.
+          On the server, import from <code>selakata/server</code> instead. That
+          version leaves out everything that needs a browser.
         </p>
       </div>
       <CodeBlock code={quickstart} lang="tsx" label="Checkout.tsx" />
@@ -337,8 +336,8 @@ const safe = insertLineBreakOpportunities(text, "km");`}
   <section class="section" id="install">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">Three ways to install</p>
-        <h2>Start with a JSON file. Add a server only if you need one.</h2>
+        <p class="eyebrow">Three ways to set it up</p>
+        <h2>Start with a JSON file. Add a server later, if you ever need one.</h2>
       </div>
 
       <div class="grid grid--3">
@@ -360,11 +359,12 @@ const safe = insertLineBreakOpportunities(text, "km");`}
   <section class="section">
     <div class="shell">
       <div class="section-head">
-        <p class="eyebrow">{localeCount} locales</p>
-        <h2>Including the ones people actually type</h2>
+        <p class="eyebrow">{localeCount} languages</p>
+        <h2>Including the ones people really type</h2>
         <p class="lede">
-          Singlish, Manglish, Taglish, and bahasa gaul are proper locale tags here,
-          not broken English or broken Indonesian. {rtlCount} locales are right to left.
+          Singlish, Manglish, Taglish, and bahasa gaul are treated as real
+          languages here, not as broken English or broken Indonesian.
+          {rtlCount} of them read right to left.
         </p>
       </div>
 
@@ -385,7 +385,7 @@ const safe = insertLineBreakOpportunities(text, "km");`}
       </ul>
 
       <p class="langs__foot">
-        <a href="/languages/">Every locale, script, calendar, and fallback chain →</a>
+        <a href="/languages/">See every language, writing system, and calendar →</a>
       </p>
     </div>
   </section>
@@ -393,14 +393,14 @@ const safe = insertLineBreakOpportunities(text, "km");`}
   <!-- ============================================================== cta -->
   <section class="section cta">
     <div class="shell cta__inner">
-      <h2>Ship Southeast Asian i18n this afternoon</h2>
+      <h2>Add it to your app today</h2>
       <p class="lede">
-        Open source, MIT, no account, no telemetry. The SDK works with plain JSON
-        files and never phones home.
+        Free and open source. No account, no tracking. It works with plain JSON
+        files and never sends anything anywhere.
       </p>
       <div class="hero__cta">
-        <a class="btn btn--primary" href="#install">Read the quickstart</a>
-        <a class="btn btn--ghost" href="/benchmarks/">See the benchmarks</a>
+        <a class="btn btn--primary" href="#install">How to set it up</a>
+        <a class="btn btn--ghost" href="/benchmarks/">See how we tested it</a>
       </div>
       <p class="cta__mix">
         {codeMixed.map((c) => <span lang={c}>{LOCALES[c].nativeName}</span>)}
