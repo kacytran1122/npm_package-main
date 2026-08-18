@@ -313,7 +313,9 @@ Southeast Asia is usually counted as eleven sovereign states. Papua New Guinea i
 
 Some of this is exact and some is best effort, and the difference matters.
 
-**Exact.** Locale metadata, currencies, calendars, plural rules, segmentation, and Vietnamese normalization sit on CLDR and `Intl`, which ship with every current runtime.
+**Exact.** Locale metadata, currencies, calendars, plural rules, and Vietnamese normalization sit on CLDR and `Intl`, which ship with every current runtime. Those are lookups with a published right answer, so delegating them is correct.
+
+**Measured.** Segmentation — word breaking, line breaking, grapheme clusters, truncation — is this package's own implementation rather than `Intl.Segmenter`, because it is a judgement rather than a lookup, because `Intl.Segmenter` is absent on Hermes and in `small-icu` builds, and because its answer moves with the host's ICU version. It is evaluated against a hand-annotated corpus with a held-out split: **96.9 macro boundary F1 against `Intl.Segmenter`'s 93.5**, identical output across ICU 76/77/78 where `Intl.Segmenter` differed on 8.6% of inputs, and zero illegal cut points where `Intl.Segmenter`'s grapheme boundaries are illegal on 20% of Thai offsets and 47% of Burmese. Method, results, and limitations: [`packages/sdk/docs/segmentation.md`](packages/sdk/docs/segmentation.md).
 
 **Curated.** Classifier tables, pronouns, and politeness particles are compiled by hand. They cover common usage. They are not a full grammar, and a native reviewer should still check your final copy.
 
@@ -324,6 +326,8 @@ Corrections in any of the 29 locales are welcome and are treated as bugs.
 ## Prior art
 
 The shape of this project is borrowed from [BhashaJS](https://github.com/thesantoshpant/bhashajs), which does the same job for South Asia. The linguistic problems are entirely different, so the implementation shares no code.
+
+The technical approaches diverge too, and deliberately. BhashaJS is built on the platform's `Intl` for its linguistic logic, which is the right call for South Asian scripts: they are written with spaces, so the hard part is plural rules and numbering systems, and CLDR has those exactly. Southeast Asia's hard part is the space that is never written down, and there the platform's answer is missing on some runtimes and unstable on the rest. So segmentation here is implemented rather than delegated, and the case for that is made with measurements in [`packages/sdk/docs/segmentation.md`](packages/sdk/docs/segmentation.md).
 
 The name is Malay and Indonesian: *sela*, a gap or interval, and *kata*, a word. **Selakata** is the space between words — the thing Thai, Khmer, Lao, and Burmese never write down, and the thing this package has to infer before it can wrap a line, count a noun, or search a string.
 

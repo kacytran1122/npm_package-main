@@ -25,7 +25,27 @@ export { pronoun, politeParticle, withPoliteness } from "./register.js";
 export { detectMyanmarEncoding, zawgyiToUnicode, normalizeMyanmar } from "./script/zawgyi.js";
 export { foldVietnamese, normalizeVietnamese, slugifyVietnamese } from "./script/vietnamese.js";
 export { toSearchKey } from "./text/search.js";
-export { insertLineBreakOpportunities, words, wordCount, truncate } from "./text/segment.js";
+export {
+  insertLineBreakOpportunities,
+  stripLineBreakOpportunities,
+  needsSegmentation,
+  words,
+  wordCount,
+  graphemes,
+  graphemeLength,
+  sentences,
+  truncate,
+  ZWSP,
+  // The segmentation stack is deterministic and ICU-free precisely so a server
+  // render and a client render agree. Both sides need the same knobs for that
+  // to hold, so they are exported here too.
+  registerWords,
+  setSegmentationEngine,
+  segmentationEngine,
+  orthographicEngine,
+  lexicalEngine,
+} from "./text/segment.js";
+export type { SegmentationEngine, Span } from "./text/segment.js";
 export { fontLinkHref, fontFaceCss, fontStackFor } from "./fonts.js";
 export { lintBundle, lintBundles } from "./lint.js";
 export * from "./names.js";

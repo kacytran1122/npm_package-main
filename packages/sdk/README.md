@@ -179,13 +179,35 @@ import { words, wordCount, truncate, insertLineBreakOpportunities } from "selaka
 
 words("ฉันรักภาษาไทย", "th");     // ["ฉัน", "รัก", "ภาษา", "ไทย"]
 wordCount("ฉันรักภาษาไทย", "th"); // 4
-truncate("ฉันรักภาษาไทยมาก", "th", 8);
+truncate("ฉันรักภาษาไทยมาก", "th", 8);       // "ฉันรักภาษา…"
 insertLineBreakOpportunities("ฉันรักภาษาไทย", "th"); // adds zero-width spaces
 ```
 
 Prefer CSS `word-break: auto-phrase` where you can. Use
 `insertLineBreakOpportunities()` for the places you cannot, such as SVG text,
 canvas, and PDF generation.
+
+This runs on the package's own segmenter, not on `Intl.Segmenter`. The engine
+is a rule-based orthographic cluster layer with a unigram Viterbi word search
+on top of it, and it is the reason the SDK works on Hermes and inside
+`small-icu` builds at all. It also scores higher: **96.9 macro boundary F1 on
+held-out data against `Intl.Segmenter`'s 93.5**, and it returns the same answer
+on every runtime, where `Intl.Segmenter` changed its answer on 8.6% of the
+corpus between ICU 76 and ICU 78. The full evaluation, including where it
+loses, is in [`docs/segmentation.md`](docs/segmentation.md).
+
+Two knobs:
+
+```ts
+import { registerWords, setSegmentationEngine, orthographicEngine } from "selakata";
+
+// Teach it your product vocabulary. Takes effect immediately.
+registerWords("th", ["เซลากาตะ"]);
+
+// Or drop the lexicon entirely: 2.3 KB gzipped instead of 10 KB, still safe
+// to break and truncate on, but word counts get coarse.
+setSegmentationEngine(orthographicEngine);
+```
 
 ## Myanmar encoding
 
@@ -378,9 +400,16 @@ database, or the clock, so the same project always scores the same.
 Some things here are exact and some are best effort. The difference matters, so
 it is stated plainly.
 
-**Exact.** Locale metadata, currency handling, calendars, plural rules,
-segmentation, and Vietnamese normalization all sit on CLDR and `Intl`, which
-ship with every current runtime.
+**Exact.** Locale metadata, currency handling, calendars, plural rules, and
+Vietnamese normalization all sit on CLDR and `Intl`, which ship with every
+current runtime. These are lookups with a published right answer, so delegating
+them is correct and reimplementing them could only introduce drift.
+
+**Measured.** Segmentation is this package's own, because it is a judgement
+rather than a lookup, and because the platform's answer is unavailable on some
+targets and version-dependent on the rest. It is evaluated against a
+hand-annotated corpus with a held-out split; the numbers, the method, and the
+limitations are in [`docs/segmentation.md`](docs/segmentation.md).
 
 **Curated.** Classifier tables, pronouns, and politeness particles are compiled
 by hand. They cover common usage. They are not a full grammar, and a native

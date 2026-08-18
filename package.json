@@ -12,6 +12,7 @@
     "typecheck": "npm run typecheck -w packages/sdk && npm run typecheck -w packages/server && npm run typecheck -w packages/dashboard",
     "pretest": "npm run build",
     "test": "npm run test -w packages/sdk && npm run test -w packages/server",
+    "bench": "npm run bench -w packages/sdk && npm run bench:footprint -w packages/sdk",
     "dev:server": "npm run dev -w packages/server",
     "dev:dashboard": "npm run dev -w packages/dashboard"
   },
