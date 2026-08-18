@@ -1,5 +1,7 @@
 # selakata
 
+[![npm version](https://img.shields.io/npm/v/selakata.svg)](https://www.npmjs.com/package/selakata)
+[![npm downloads](https://img.shields.io/npm/dm/selakata.svg)](https://www.npmjs.com/package/selakata)
 [![CI](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml/badge.svg)](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](package.json)
@@ -7,6 +9,8 @@
 [![Countries](https://img.shields.io/badge/countries-12-2fd3b4.svg)](#every-language-we-support)
 
 **A toolkit for making your app work in Southeast Asian languages.**
+
+[View `selakata` on npm](https://www.npmjs.com/package/selakata) or install it with `npm install selakata`.
 
 If your app needs to speak Vietnamese, Thai, Indonesian, Malay, Filipino,
 Khmer, Burmese, or Lao, this handles the parts that other translation libraries
