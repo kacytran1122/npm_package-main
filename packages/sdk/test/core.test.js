@@ -15,6 +15,7 @@ import {
   formatName,
   fromTelex,
   hasGrammaticalNumber,
+  hasVietnameseDiacritics,
   insertLineBreakOpportunities,
   lintBundle,
   nameFields,
@@ -29,7 +30,10 @@ import {
   toLatinDigits,
   toNativeDigits,
   toSearchKey,
+  countOrder,
+  usesClassifiers,
   truncate,
+  validateName,
   wordCount,
   words,
   zawgyiToUnicode,
@@ -232,6 +236,35 @@ test("converts Telex input", () => {
   assert.equal(fromTelex("ddaa"), "đâ");
 });
 
+test("a Telex tone key is read after the final consonant", () => {
+  // "tieengs" is tiếng. Reading the s as a letter leaves it stranded.
+  assert.equal(fromTelex("Tieengs Vieejt"), "Tiếng Việt");
+  assert.equal(fromTelex("chuoongs"), "chuống");
+  assert.equal(fromTelex("ddoongf"), "đồng");
+});
+
+test("a Telex tone key is read after a vowel modifier", () => {
+  // aw is one vowel, ă, so the x that follows it is a tone and not a letter.
+  assert.equal(fromTelex("Ddaf Nawxng"), "Đà Nẵng");
+});
+
+test("the tone lands on the nucleus, which depends on the final consonant", () => {
+  assert.equal(fromTelex("chaof"), "chào");
+  assert.equal(fromTelex("muaf"), "mùa");
+  assert.equal(fromTelex("hoaf"), "hòa");
+  assert.equal(fromTelex("toans"), "toán");
+  assert.equal(fromTelex("tieenf"), "tiền");
+  assert.equal(fromTelex("giayf"), "giày");
+});
+
+test("Vietnamese diacritics are detected in either Unicode form", () => {
+  for (const word of ["tư", "Tiếng", "Đà Nẵng", "Hà Nội"]) {
+    assert.equal(hasVietnameseDiacritics(word), true, word);
+    assert.equal(hasVietnameseDiacritics(word.normalize("NFD")), true, `NFD ${word}`);
+  }
+  assert.equal(hasVietnameseDiacritics("hello"), false);
+});
+
 // ------------------------------------------------------------------ segmentation
 
 test("segments unspaced scripts", () => {
@@ -370,4 +403,23 @@ test("flags placeholder drift against the source", () => {
 test("clean bundles produce no issues", () => {
   const issues = lintBundle("vi", { greeting: "Xin chào" }, { greeting: "Hello" });
   assert.deepEqual(issues, []);
+});
+
+test("an unknown locale is not claimed as a classifier language", () => {
+  // usesClassifiers and countOrder have to agree, including on the default.
+  for (const locale of ["de", "fr", "xx-YY"]) {
+    assert.equal(usesClassifiers(locale), false, locale);
+    assert.equal(countOrder(locale), "num-noun", locale);
+  }
+  assert.equal(usesClassifiers("vi"), true);
+  assert.equal(usesClassifiers("th"), true);
+});
+
+test("a missing name is reported once, not once per rule", () => {
+  assert.deepEqual(validateName({}, "MM"), ["Name is required"]);
+  assert.deepEqual(validateName({ full: "Aung San Suu Kyi" }, "MM"), []);
+  assert.deepEqual(validateName({}, "VN"), [
+    "Family name is required",
+    "Given name is required",
+  ]);
 });

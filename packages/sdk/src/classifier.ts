@@ -142,14 +142,19 @@ export function classifierFor(
   return undefined;
 }
 
-/** True when the language requires a classifier in counted phrases. */
-export function usesClassifiers(locale: string): boolean {
-  return resolveLocale(locale)?.countOrder !== "num-noun";
-}
-
 /** Where the numeral and classifier sit relative to the noun. */
 export function countOrder(locale: string): CountOrder {
   return resolveLocale(locale)?.countOrder ?? "num-noun";
+}
+
+/**
+ * True when the language requires a classifier in counted phrases.
+ *
+ * Defined in terms of countOrder so an unknown locale answers false rather
+ * than claiming a classifier language it knows nothing about.
+ */
+export function usesClassifiers(locale: string): boolean {
+  return countOrder(locale) !== "num-noun";
 }
 
 export interface CountOptions {

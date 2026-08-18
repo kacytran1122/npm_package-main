@@ -105,15 +105,17 @@ export function formatName(name: PersonName, country: string): string {
 }
 
 /**
- * How to address someone in conversation. Thai users go by nickname, Vietnamese
- * by given name even in formal settings, most others by family name.
+ * How to address someone in conversation. Thai users go by nickname, Burmese by
+ * their whole indivisible name, and everyone else by the given name — including
+ * Vietnamese and Khmer speakers, who write the family name first regardless.
  */
 export function shortName(name: PersonName, country: string): string {
   const c = getCountry(country);
   if (country.toUpperCase() === "TH" && name.nickname) return name.nickname;
   if (c?.nameOrder === "mononym") return name.full ?? name.given ?? "";
-  // Vietnamese and Khmer speakers use the given name, not the family name.
-  if (c?.nameOrder === "family-given") return name.given ?? name.full ?? "";
+  // Everywhere else in the region people are addressed by the given name,
+  // including Vietnam and Cambodia, where the family name comes first in
+  // writing but is never what you call someone.
   return name.given ?? name.full ?? "";
 }
 
@@ -129,10 +131,14 @@ export function allowsMononym(country: string): boolean {
  */
 export function validateName(name: PersonName, country: string): string[] {
   const problems: string[] = [];
-  const filled = nameFields(country).filter(
+  const empty = nameFields(country).filter(
     (f) => f.required && !String(name[f.key] ?? "").trim(),
   );
-  for (const f of filled) problems.push(`${f.label} is required`);
-  if (!name.full && !name.given && !name.family) problems.push("Name is required");
+  for (const f of empty) problems.push(`${f.label} is required`);
+  // Backstop for an unknown country, whose fields we had to guess. Only fires
+  // when no required field already reported itself, so nothing repeats.
+  if (problems.length === 0 && !name.full && !name.given && !name.family) {
+    problems.push("Name is required");
+  }
   return problems;
 }

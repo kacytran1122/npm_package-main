@@ -6,12 +6,11 @@
     "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx",
     "strict": true,
-    "declaration": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": false,
-    "outDir": "dist",
+    "noEmit": true,
     "types": ["node"]
   },
   "include": ["src"]

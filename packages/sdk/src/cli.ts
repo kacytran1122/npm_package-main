@@ -4,7 +4,7 @@ import { join, resolve } from "node:path";
 import { lintBundles, type LintIssue } from "./lint.js";
 import { type Bundle } from "./core.js";
 import { readinessFromBundles, type LocaleReadiness } from "./readiness.js";
-import { COUNTRIES, LOCALES, localesForCountry } from "./locales/index.js";
+import { COUNTRIES, LOCALES, localesForCountry, resolveLocale } from "./locales/index.js";
 import { fontLinkHref } from "./fonts.js";
 
 const args = process.argv.slice(2);
@@ -12,7 +12,23 @@ const command = args[0];
 
 function flag(name: string, fallback?: string): string | undefined {
   const i = args.indexOf(`--${name}`);
-  return i >= 0 ? args[i + 1] : fallback;
+  if (i < 0) return fallback;
+  // A trailing `--dir` with nothing after it, or `--dir --strict`, is a
+  // missing value, not the literal next flag.
+  const value = args[i + 1];
+  return value === undefined || value.startsWith("--") ? fallback : value;
+}
+
+/** A numeric flag, rejected loudly rather than silently becoming NaN. */
+function numberFlag(name: string, fallback: number): number {
+  const raw = flag(name);
+  if (raw === undefined) return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) {
+    console.error(`sela: --${name} expects a number, received "${raw}"`);
+    process.exit(1);
+  }
+  return value;
 }
 
 function loadBundles(dir: string): Record<string, Bundle> {
@@ -24,14 +40,21 @@ function loadBundles(dir: string): Record<string, Bundle> {
   for (const file of readdirSync(dir)) {
     if (!file.endsWith(".json")) continue;
     const locale = file.replace(/\.json$/, "");
-    bundles[locale] = JSON.parse(readFileSync(join(dir, file), "utf8"));
+    const path = join(dir, file);
+    try {
+      bundles[locale] = JSON.parse(readFileSync(path, "utf8"));
+    } catch (error) {
+      console.error(`sela: cannot read ${path}: ${(error as Error).message}`);
+      process.exit(1);
+    }
   }
   return bundles;
 }
 
 function cmdInit(): void {
   const country = (flag("country") ?? "VN").toUpperCase();
-  const dir = resolve(flag("dir") ?? "locales");
+  const localesDir = flag("dir") ?? "locales";
+  const dir = resolve(localesDir);
   const locales = localesForCountry(country);
 
   if (locales.length === 0) {
@@ -59,7 +82,7 @@ function cmdInit(): void {
     country,
     defaultLocale: COUNTRIES[country as keyof typeof COUNTRIES].defaultLocale,
     locales,
-    localesDir: "locales",
+    localesDir,
     reference: "en",
   };
   writeFileSync("sela.config.json", JSON.stringify(config, null, 2) + "\n");
@@ -104,7 +127,7 @@ function cmdLint(): void {
 function cmdReadiness(): void {
   const dir = resolve(flag("dir") ?? "locales");
   const reference = flag("reference") ?? "en";
-  const threshold = Number(flag("threshold") ?? "75");
+  const threshold = numberFlag("threshold", 75);
   const verbose = args.includes("--verbose");
 
   const report = readinessFromBundles(loadBundles(dir), reference, threshold);
@@ -149,8 +172,9 @@ function cmdInfo(): void {
     console.log(JSON.stringify(COUNTRIES[target.toUpperCase() as keyof typeof COUNTRIES], null, 2));
     return;
   }
-  if (target && LOCALES[target]) {
-    console.log(JSON.stringify(LOCALES[target], null, 2));
+  const def = target ? resolveLocale(target) : undefined;
+  if (def) {
+    console.log(JSON.stringify(def, null, 2));
     return;
   }
   console.log(`${Object.keys(COUNTRIES).length} countries, ${Object.keys(LOCALES).length} locales\n`);
