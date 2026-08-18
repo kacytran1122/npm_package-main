@@ -1,0 +1,21 @@
+{
+  "name": "selakata-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/sdk && npm run build -w packages/server",
+    "build:dashboard": "npm run build -w packages/dashboard",
+    "pretypecheck": "npm run build -w packages/sdk",
+    "typecheck": "npm run typecheck -w packages/sdk && npm run typecheck -w packages/server && npm run typecheck -w packages/dashboard",
+    "pretest": "npm run build",
+    "test": "npm run test -w packages/sdk && npm run test -w packages/server",
+    "dev:server": "npm run dev -w packages/server",
+    "dev:dashboard": "npm run dev -w packages/dashboard"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

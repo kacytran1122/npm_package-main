@@ -1,0 +1,515 @@
+/*
+ * The palette is cool and low-chroma on purpose. This screen shows text in up
+ * to fourteen scripts at once, and a saturated interface competes with the
+ * only thing that matters here, which is whether the translation reads well.
+ */
+
+:root {
+  --paper: #fbfaf7;
+  --panel: #ffffff;
+  --ink: #16202a;
+  --muted: #6a7683;
+  --rule: #e4e2dc;
+  --accent: #0f6e62;
+  --accent-soft: #e6f0ee;
+  --draft: #b4620a;
+  --draft-soft: #fdf1e3;
+  --flag: #a32c2c;
+
+  /*
+   * Facet ramp for the readiness meter. Three steps down the accent for the
+   * facets that measure the translation itself, and the draft amber for the
+   * one that measures whether a human looked at it -- the same amber already
+   * used for drafts elsewhere, so the colour keeps its meaning.
+   */
+  --facet-1: #0f6e62;
+  --facet-2: #3f8d82;
+  --facet-3: #7fb1a9;
+  --facet-4: #d79b52;
+
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  --radius: 6px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------ shell */
+
+.shell {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  border-right: 1px solid var(--rule);
+  padding: 20px 18px;
+  background: var(--panel);
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 620;
+  letter-spacing: -0.02em;
+  margin: 0 0 2px;
+}
+
+.wordmark span {
+  color: var(--accent);
+}
+
+.tagline {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 24px;
+}
+
+.main {
+  padding: 24px 28px 64px;
+  min-width: 0; /* lets the table scroll instead of blowing out the grid */
+}
+
+/* ------------------------------------------------------------- typography */
+
+h2 {
+  font-size: 15px;
+  font-weight: 620;
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 22px 0 8px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ---------------------------------------------------------------- controls */
+
+.btn {
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: var(--radius);
+  padding: 7px 12px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.btn:hover {
+  border-color: var(--muted);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: #0c5c52;
+  border-color: #0c5c52;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.field {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  background: var(--panel);
+}
+
+.field:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------- locale list */
+
+.locale-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.locale-row {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  padding: 7px 8px;
+  border-radius: var(--radius);
+}
+
+.locale-row:hover {
+  background: var(--paper);
+}
+
+.locale-row[aria-current="true"] {
+  background: var(--accent-soft);
+}
+
+.locale-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.locale-code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.locale-pct {
+  font-size: 11px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A 2px rule reads as a measurement, not a decoration. */
+.meter {
+  height: 2px;
+  background: var(--rule);
+  border-radius: 2px;
+  margin-top: 5px;
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+/*
+ * Segmented readiness meter. Taller than the plain coverage bar it replaced,
+ * because it now carries four values instead of one and the segments need to
+ * be separable at a glance.
+ */
+.meter-facets {
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.meter-facets .facet {
+  height: 100%;
+  transition: width 160ms ease-out;
+}
+
+/* Hairlines between segments, so adjacent steps of the ramp stay legible. */
+.meter-facets .facet + .facet {
+  box-shadow: inset 1px 0 0 var(--panel);
+}
+
+/* Scoped under .meter-facets to outrank the plain `.meter i` fill above. */
+.meter-facets .facet-translated {
+  background: var(--facet-1);
+}
+.meter-facets .facet-registerDepth {
+  background: var(--facet-2);
+}
+.meter-facets .facet-lintClean {
+  background: var(--facet-3);
+}
+.meter-facets .facet-reviewed {
+  background: var(--facet-4);
+}
+
+/* ------------------------------------------------------------------ grades */
+
+.grade {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  vertical-align: 1px;
+}
+
+.grade-A,
+.grade-B {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.grade-C {
+  background: var(--draft-soft);
+  color: var(--draft);
+}
+
+.grade-D,
+.grade-F {
+  background: #f7e6e6;
+  color: var(--flag);
+}
+
+.hint-blocking {
+  color: var(--flag);
+}
+
+/* ------------------------------------------------------------------ table */
+
+.table-wrap {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--panel);
+  overflow: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #fcfcfa;
+}
+
+.key-name {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+/*
+ * The signature element. Every translation renders in its own script's font,
+ * direction, and line height, all taken from the SDK's locale data. Khmer and
+ * Burmese stack marks above and below the baseline and get clipped at the line
+ * heights Latin gets away with, so this is legibility, not styling.
+ */
+.script-cell {
+  font-family: var(--cell-font, var(--sans));
+  line-height: var(--cell-leading, 1.5);
+  direction: var(--cell-dir, ltr);
+  text-align: start;
+  min-width: 220px;
+}
+
+.script-cell.empty {
+  color: var(--muted);
+  font-style: italic;
+  font-family: var(--sans);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.tag-draft {
+  background: var(--draft-soft);
+  color: var(--draft);
+}
+
+.tag-regulated {
+  background: #f2eef8;
+  color: #5b3f96;
+}
+
+/* ----------------------------------------------------------------- editor */
+
+.editor {
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+
+.register-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+
+.register-tab {
+  border: 1px solid transparent;
+  background: none;
+  color: var(--muted);
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+}
+
+.register-tab[aria-selected="true"] {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.editor-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.editor-row label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.editor-row textarea {
+  min-height: 60px;
+  resize: vertical;
+  font-family: var(--cell-font, var(--sans));
+  line-height: var(--cell-leading, 1.6);
+  direction: var(--cell-dir, ltr);
+}
+
+/* ------------------------------------------------------------------ notes */
+
+.issue {
+  border-left: 2px solid var(--draft);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: var(--draft-soft);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.issue.error {
+  border-left-color: var(--flag);
+  background: #fbeeee;
+}
+
+.issue-head {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  margin-bottom: 2px;
+}
+
+.banner {
+  border: 1px solid var(--rule);
+  border-left: 2px solid var(--flag);
+  background: #fbeeee;
+  padding: 10px 14px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  margin-bottom: 16px;
+}
+
+.empty-state {
+  border: 1px dashed var(--rule);
+  border-radius: 8px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ login */
+
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 340px;
+}
+
+.login-card .field {
+  margin-bottom: 10px;
+}
+
+/* --------------------------------------------------------------- responsive */
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .main {
+    padding: 18px 16px 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
