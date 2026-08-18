@@ -1,7 +1,6 @@
 # selakata
 
 [![npm version](https://img.shields.io/npm/v/selakata.svg)](https://www.npmjs.com/package/selakata)
-[![npm downloads](https://img.shields.io/npm/dm/selakata.svg)](https://www.npmjs.com/package/selakata)
 [![CI](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml/badge.svg)](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-brightgreen.svg)](package.json)
