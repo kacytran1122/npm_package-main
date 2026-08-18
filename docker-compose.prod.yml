@@ -46,5 +46,17 @@ services:
     ports:
       - "80:80"
 
+  # The public marketing and documentation site. Static, no backend, and behind
+  # a profile so `deploy.sh` keeps starting exactly the stack it did before.
+  #   docker compose -f docker-compose.prod.yml --profile site up -d
+  site:
+    profiles: ["site"]
+    build:
+      context: .
+      dockerfile: packages/site/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "${SITE_PORT:-8080}:80"
+
 volumes:
   mongo-data:

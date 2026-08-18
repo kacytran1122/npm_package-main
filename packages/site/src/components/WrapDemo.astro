@@ -1,0 +1,148 @@
+---
+import { insertLineBreakOpportunities, wordCount } from "selakata";
+
+/**
+ * The overflow, side by side.
+ *
+ * Both columns are the same width and hold the same Khmer sentence. The left
+ * one is the string as it arrives from a translator; CSS finds nowhere to
+ * wrap it, so it runs straight out of its container. The right one has been
+ * through insertLineBreakOpportunities(), which puts a zero-width space at
+ * every word boundary.
+ *
+ * Computed at build time, so this section ships no JavaScript.
+ */
+
+const SAMPLE = {
+  locale: "km",
+  text: "ការទូទាត់របស់អ្នកមិនបានសម្រេចសូមពិនិត្យព័ត៌មានកាតហើយព្យាយាមម្តងទៀត",
+  gloss: "Your payment did not go through. Check your card details and try again.",
+};
+
+const fixed = insertLineBreakOpportunities(SAMPLE.text, SAMPLE.locale);
+const breaks = fixed.split("​").length - 1;
+const count = wordCount(SAMPLE.text, SAMPLE.locale);
+---
+
+<div class="wrap">
+  <figure class="wrap__col wrap__col--bad">
+    <figcaption>
+      <span class="wrap__tag">Without</span>
+      <span class="wrap__meta">0 break opportunities</span>
+    </figcaption>
+    <div class="wrap__box">
+      <p lang={SAMPLE.locale} class="wrap__text">{SAMPLE.text}</p>
+    </div>
+    <p class="wrap__foot">
+      One unbreakable run. The text leaves the card, and on a phone it takes the
+      layout with it.
+    </p>
+  </figure>
+
+  <figure class="wrap__col wrap__col--good">
+    <figcaption>
+      <span class="wrap__tag wrap__tag--on">With</span>
+      <span class="wrap__meta">{breaks} break opportunities</span>
+    </figcaption>
+    <div class="wrap__box">
+      <p lang={SAMPLE.locale} class="wrap__text">{fixed}</p>
+    </div>
+    <p class="wrap__foot">
+      A zero-width space at each of the {breaks} boundaries between its {count}
+      words. Invisible, and it survives copy and paste.
+    </p>
+  </figure>
+</div>
+
+<p class="wrap__gloss">“{SAMPLE.gloss}”</p>
+
+<style>
+  /*
+   * Both columns are held to the width of a phone card on purpose. The whole
+   * point is what happens when the container is narrower than the sentence,
+   * and a demo in a 600px column never reaches that.
+   */
+  .wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 34px;
+  }
+
+  .wrap__col {
+    margin: 0;
+    width: 296px;
+    max-width: 100%;
+  }
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 11px;
+  }
+
+  .wrap__tag {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ember);
+  }
+
+  .wrap__tag--on {
+    color: var(--jade);
+  }
+
+  .wrap__meta {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--faint);
+  }
+
+  /*
+   * A deliberately narrow column — a card, a table cell, a phone. The box
+   * clips rather than scrolls, because a real layout clips too.
+   */
+  .wrap__box {
+    height: 196px;
+    padding: 16px;
+    border: 1px solid var(--seam);
+    border-radius: var(--radius);
+    background: var(--raised);
+    overflow: hidden;
+  }
+
+  .wrap__col--bad .wrap__box {
+    border-color: rgb(240 163 92 / 34%);
+  }
+
+  .wrap__col--good .wrap__box {
+    border-color: rgb(47 211 180 / 32%);
+  }
+
+  .wrap__text {
+    font-family: var(--khmer);
+    font-size: 1.02rem;
+    /* Khmer clips at Latin line heights. */
+    line-height: 1.95;
+    white-space: normal;
+  }
+
+  .wrap__col--bad .wrap__text {
+    /* No break opportunity exists, so the browser cannot wrap it. */
+    white-space: nowrap;
+  }
+
+  .wrap__foot {
+    margin-top: 12px;
+    font-size: 0.86rem;
+    color: var(--muted);
+  }
+
+  .wrap__gloss {
+    margin-top: 22px;
+    color: var(--faint);
+    font-size: 0.9rem;
+  }
+</style>

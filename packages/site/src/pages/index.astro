@@ -1,0 +1,690 @@
+---
+import Base from "../layouts/Base.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import WrapDemo from "../components/WrapDemo.astro";
+import SeamInspector from "../components/SeamInspector.tsx";
+import Playground from "../components/Playground.tsx";
+import { COUNTRIES, LOCALE_CODES, LOCALES, unspacedLocales } from "selakata";
+
+// Every number on this page is read out of the package at build time. If the
+// registry changes, the marketing copy changes with it.
+const localeCount = LOCALE_CODES.length;
+const countryCount = Object.keys(COUNTRIES).length;
+const unspacedCount = unspacedLocales().length;
+const rtlCount = LOCALE_CODES.filter((c) => LOCALES[c].dir === "rtl").length;
+const codeMixed = LOCALE_CODES.filter((c) => LOCALES[c].codeMixed);
+
+const stats = [
+  { value: String(countryCount), label: "Countries" },
+  { value: String(localeCount), label: "Locales" },
+  { value: String(unspacedCount), label: "Locales with no spaces" },
+  { value: "MIT", label: "Licence" },
+];
+
+const comparison = [
+  { row: "Word and line breaking for Thai, Khmer, Lao, Burmese", them: false },
+  { row: "Numeral classifiers in counted phrases", them: false },
+  { row: "Politeness that varies with the speaker's gender", them: false },
+  { row: "Javanese and Sundanese speech levels", them: false },
+  { row: "Buddhist Era dates by default for Thai", them: false },
+  { row: "Zawgyi detection and conversion", them: false },
+  { row: "Code-mixed locales as first-class tags", them: false },
+  { row: "Whole-unit currencies without phantom decimals", them: "partial" },
+  { row: "Script-aware font stacks and line heights", them: false },
+  { row: "Regional fallback chains before English", them: "partial" },
+  { row: "CLDR plural rules", them: true },
+  { row: "Message interpolation", them: true },
+];
+
+const features = [
+  {
+    title: "Line breaking that does not need ICU",
+    body: "Thai, Lao, Khmer, and Burmese give CSS nothing to wrap on. The segmenter is the package's own — deterministic across runtimes, and present on Hermes and small-icu builds where Intl.Segmenter simply is not.",
+    api: "insertLineBreakOpportunities()",
+  },
+  {
+    title: "Counted phrases with the right classifier",
+    body: "“2 mèo” is broken Vietnamese. You need a measure word, and its position moves between languages: Vietnamese puts it before the noun, Thai after.",
+    api: "formatCount()",
+  },
+  {
+    title: "Politeness that knows who is speaking",
+    body: "Thai sentence particles mark the speaker's gender. Hardcode ครับ and your product speaks as a man to every user, forever.",
+    api: "politeParticle()",
+  },
+  {
+    title: "Speech levels, not just formality",
+    body: "Javanese distinguishes ngoko, madya, and krama; Sundanese loma and lemes. Both map onto a portable three-step ladder so one key can carry all of them.",
+    api: "speechLevel()",
+  },
+  {
+    title: "Burmese in two incompatible encodings",
+    body: "Zawgyi and Unicode share a code block and disagree about what it means. Guard imports and repair legacy text before it reaches your database.",
+    api: "detectMyanmarEncoding()",
+  },
+  {
+    title: "Money and dates as the region writes them",
+    body: "The dong, rupiah, riel, kip, and kyat are quoted whole. Thai dates default to the Buddhist Era, because that is what every Thai form prints.",
+    api: "formatCurrency()",
+  },
+  {
+    title: "Names without a surname",
+    body: "Burmese names have no family name. Indonesian mononyms are legal. A required last-name field rejects valid legal identities.",
+    api: "nameFields()",
+  },
+  {
+    title: "A linter for regional bugs",
+    body: "Catches missing classifiers, hardcoded gendered particles, English plural hacks, unbreakable strings, and placeholder drift — in CI, before review.",
+    api: "lintBundle()",
+  },
+];
+
+/*
+ * Three alternatives, not three steps, so they are labelled by the thing that
+ * actually separates them: whose server the translations live on.
+ */
+const install = [
+  {
+    runs: "No server",
+    title: "Bundled",
+    body: "Local JSON, no account. The SDK has no runtime dependencies and never makes a network call.",
+    code: `import th from "./locales/th.json";
+
+<I18nProvider
+  locale="th"
+  bundles={{ th }}
+>
+  <App />
+</I18nProvider>`,
+  },
+  {
+    runs: "Our server",
+    title: "Hosted",
+    body: "Point the SDK at the API with a project key. Translators work in the dashboard; AI drafts wait for human review.",
+    code: `<I18nProvider
+  locale="th"
+  apiKey={env.SELAKATA_KEY}
+  project="acme-web"
+>
+  <App />
+</I18nProvider>`,
+  },
+  {
+    runs: "Your server",
+    title: "Self-hosted",
+    body: "The API, MongoDB, and the dashboard behind one nginx. Your keys, your data, your region.",
+    code: `cp .env.example .env
+# JWT_SECRET: 32+ chars
+./deploy.sh
+# dashboard :80
+# api       :80/api/v1`,
+    lang: "bash" as const,
+  },
+];
+
+const quickstart = `import { I18nProvider, useTranslation } from "selakata/react";
+
+function Checkout() {
+  const { t, currency, count } = useTranslation();
+
+  return (
+    <>
+      <h1>{t("cart.title")}</h1>
+      <p>{count(3, "หนังสือ", { category: "book" })}</p>
+      <p>{currency(2500)}</p>
+      <p>{t("thanks", {}, { polite: true })}</p>
+    </>
+  );
+}`;
+---
+
+<Base
+  title="selakata — i18n built for Southeast Asia"
+  description="An i18n toolkit for Vietnamese, Thai, Indonesian, Malay, Filipino, Khmer, Burmese, Lao and more. Word breaking without ICU, numeral classifiers, speaker-aware politeness, Buddhist Era dates, and Zawgyi detection."
+>
+  <!-- ============================================================= hero -->
+  <section class="hero">
+    <div class="shell hero__grid">
+      <div class="hero__copy">
+        <p class="eyebrow">12 countries · {localeCount} locales</p>
+        <h1>
+          The space<br />between words
+        </h1>
+        <p class="lede">
+          Most i18n libraries were designed around European grammar. They hand you
+          plural rules and date formats and assume the rest is a lookup table.
+          Southeast Asia breaks that assumption before you render your first
+          string — starting with the fact that four of its languages do not write
+          spaces at all.
+        </p>
+
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="#install">Get started</a>
+          <a
+            class="btn btn--ghost"
+            href="https://github.com/kacytran1122/selakata"
+            rel="noopener">View on GitHub</a
+          >
+        </div>
+
+        <div class="hero__install">
+          <code>npm install selakata</code>
+          <span class="tag">no runtime deps</span>
+        </div>
+      </div>
+
+      <div class="hero__demo">
+        <SeamInspector client:load />
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================ stats -->
+  <section class="section section--flush stats-band">
+    <div class="shell">
+      <dl class="stats">
+        {
+          stats.map((s) => (
+            <div class="stat">
+              <dd>{s.value}</dd>
+              <dt>{s.label}</dt>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </section>
+
+  <!-- ========================================================== problem -->
+  <section class="section" id="problem">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Why a separate library</p>
+        <h2>Your text leaves the container before it reaches a translator</h2>
+        <p class="lede">
+          This is not a polish item. A Khmer string with no break opportunity is a
+          layout bug that ships to every phone in the country, and no amount of
+          careful translation fixes it.
+        </p>
+      </div>
+
+      <div class="problem">
+        <div class="problem__demo">
+          <WrapDemo />
+        </div>
+        <div class="problem__aside">
+          <CodeBlock
+            code={`import { insertLineBreakOpportunities } from "selakata";
+
+const safe = insertLineBreakOpportunities(text, "km");`}
+            label="The whole fix"
+          />
+          <p class="muted problem__note">
+            Prefer CSS <code>word-break: auto-phrase</code> where the browser
+            supports it. This exists for everywhere you cannot reach with CSS:
+            SVG text, canvas, PDF generation, and every email client.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================= comparison -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Against i18next and react-intl</p>
+        <h2>What a generic library leaves to you</h2>
+        <p class="lede">
+          The general-purpose libraries are good at the general-purpose parts, and
+          this list is not a criticism of them. It is a list of what you end up
+          writing yourself the first time you ship to this region.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Capability</th>
+              <th scope="col">i18next / react-intl</th>
+              <th scope="col">selakata</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              comparison.map((c) => (
+                <tr>
+                  <th scope="row">{c.row}</th>
+                  <td>
+                    {c.them === true ? (
+                      <span class="yes">Built in</span>
+                    ) : c.them === "partial" ? (
+                      <span class="muted">Partial, via Intl</span>
+                    ) : (
+                      <span class="no">You write it</span>
+                    )}
+                  </td>
+                  <td><span class="yes">Built in</span></td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================= features -->
+  <section class="section" id="features">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Features</p>
+        <h2>Everything the region actually needs</h2>
+      </div>
+
+      <div class="grid grid--3">
+        {
+          features.map((f) => (
+            <article class="panel feature">
+              <h3>{f.title}</h3>
+              <p>{f.body}</p>
+              <code class="feature__api">{f.api}</code>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================= playground -->
+  <section class="section" id="playground">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Playground</p>
+        <h2>Four things that go wrong, running live</h2>
+        <p class="lede">
+          Every value below is computed by the published package in your browser.
+          Nothing here is a screenshot.
+        </p>
+      </div>
+
+      <Playground client:visible />
+    </div>
+  </section>
+
+  <!-- ============================================================= code -->
+  <section class="section">
+    <div class="shell code-split">
+      <div>
+        <p class="eyebrow">React</p>
+        <h2>One provider, then get out of the way</h2>
+        <p class="lede" style="margin-top:16px">
+          <code>useTranslation()</code> returns the formatters already bound to the
+          active locale and the speaker you configured, so a component never has to
+          know which country it is rendering for.
+        </p>
+        <p class="lede" style="margin-top:16px">
+          Server components import from <code>selakata/server</code>, which excludes
+          React context and every browser-only path.
+        </p>
+      </div>
+      <CodeBlock code={quickstart} lang="tsx" label="Checkout.tsx" />
+    </div>
+  </section>
+
+  <!-- ========================================================== install -->
+  <section class="section" id="install">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Three ways to install</p>
+        <h2>Start with a JSON file. Add a server only if you need one.</h2>
+      </div>
+
+      <div class="grid grid--3">
+        {
+          install.map((m) => (
+            <article class="panel mode">
+              <span class="mode__runs">{m.runs}</span>
+              <h3>{m.title}</h3>
+              <p>{m.body}</p>
+              <CodeBlock code={m.code} lang={m.lang ?? "tsx"} />
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== languages -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">{localeCount} locales</p>
+        <h2>Including the ones people actually type</h2>
+        <p class="lede">
+          Singlish, Manglish, Taglish, and bahasa gaul are proper locale tags here,
+          not broken English or broken Indonesian. {rtlCount} locales are right to left.
+        </p>
+      </div>
+
+      <ul class="langs">
+        {
+          LOCALE_CODES.map((code) => {
+            const l = LOCALES[code];
+            return (
+              <li class="lang">
+                <span class="lang__native" lang={code} dir={l.dir}>
+                  {l.nativeName}
+                </span>
+                <span class="lang__code">{code}</span>
+              </li>
+            );
+          })
+        }
+      </ul>
+
+      <p class="langs__foot">
+        <a href="/languages/">Every locale, script, calendar, and fallback chain →</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================== cta -->
+  <section class="section cta">
+    <div class="shell cta__inner">
+      <h2>Ship Southeast Asian i18n this afternoon</h2>
+      <p class="lede">
+        Open source, MIT, no account, no telemetry. The SDK works with plain JSON
+        files and never phones home.
+      </p>
+      <div class="hero__cta">
+        <a class="btn btn--primary" href="#install">Read the quickstart</a>
+        <a class="btn btn--ghost" href="/benchmarks/">See the benchmarks</a>
+      </div>
+      <p class="cta__mix">
+        {codeMixed.map((c) => <span lang={c}>{LOCALES[c].nativeName}</span>)}
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ---------------------------------------------------------- problem */
+
+  .problem {
+    display: grid;
+    grid-template-columns: auto minmax(300px, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* WrapDemo emits the two cards and its gloss as siblings, so it needs a
+     wrapper of its own or they become separate grid items. */
+  .problem > * {
+    min-width: 0;
+  }
+
+  .problem__note {
+    margin-top: 18px;
+    font-size: 0.9rem;
+  }
+
+  .problem__note code {
+    color: var(--jade);
+  }
+
+  @media (max-width: 900px) {
+    .problem {
+      grid-template-columns: 1fr;
+      gap: 34px;
+    }
+  }
+
+  /* ------------------------------------------------------------- hero */
+
+  .hero {
+    padding-block: clamp(48px, 6vw, 88px) clamp(56px, 6vw, 96px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    inset: -30% 40% 40% -20%;
+    background: radial-gradient(closest-side, rgb(47 211 180 / 9%), transparent);
+    pointer-events: none;
+  }
+
+  .hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    gap: 56px;
+    align-items: center;
+    position: relative;
+  }
+
+  .hero__copy h1 {
+    margin-bottom: 22px;
+  }
+
+  .hero__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 30px;
+  }
+
+  .hero__install {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid var(--seam);
+  }
+
+  .hero__install code {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  @media (max-width: 940px) {
+    .hero__grid {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+  }
+
+  /* ------------------------------------------------------------ stats */
+
+  .stats-band {
+    padding-block: 0;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    margin: 0;
+    border-block: 1px solid var(--seam);
+  }
+
+  .stat {
+    padding: 26px 22px;
+    border-left: 1px solid var(--seam);
+  }
+
+  .stat:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .stat dd {
+    margin: 0;
+    font-size: clamp(1.9rem, 1.4rem + 1.6vw, 2.6rem);
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat dt {
+    margin-top: 9px;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  /* --------------------------------------------------------- features */
+
+  .feature {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .feature p {
+    margin-top: 11px;
+    margin-bottom: 18px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  /* The API name sits on the card's bottom edge so the row reads as a list of
+     entry points rather than eight ragged paragraphs. */
+  .feature__api {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid var(--seam);
+    font-size: 0.78rem;
+    color: var(--jade);
+  }
+
+  /* ------------------------------------------------------------- code */
+
+  .code-split {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    gap: 44px;
+    align-items: center;
+  }
+
+  .code-split > * {
+    min-width: 0;
+  }
+
+  .code-split code {
+    color: var(--jade);
+  }
+
+  /* ------------------------------------------------------------ modes */
+
+  .mode__runs {
+    display: inline-block;
+    padding: 3px 9px;
+    border: 1px solid rgb(47 211 180 / 30%);
+    border-radius: 999px;
+    font-family: var(--mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--jade);
+  }
+
+  .mode h3 {
+    margin-top: 10px;
+  }
+
+  .mode p {
+    margin-top: 10px;
+    margin-bottom: 18px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  /* ------------------------------------------------------------ langs */
+
+  .langs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    border-top: 1px solid var(--seam);
+    border-left: 1px solid var(--seam);
+  }
+
+  .lang {
+    padding: 15px 16px;
+    border-right: 1px solid var(--seam);
+    border-bottom: 1px solid var(--seam);
+    min-width: 0;
+    transition: background-color 0.18s var(--step);
+  }
+
+  .lang:hover {
+    background: var(--raised);
+  }
+
+  .lang__native {
+    display: block;
+    font-size: 1.02rem;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+  }
+
+  .lang__code {
+    display: block;
+    margin-top: 3px;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--faint);
+  }
+
+  .langs__foot {
+    margin-top: 22px;
+  }
+
+  .langs__foot a {
+    color: var(--jade);
+    font-size: 0.92rem;
+  }
+
+  .langs__foot a:hover {
+    text-decoration: underline;
+  }
+
+  /* -------------------------------------------------------------- cta */
+
+  .cta__inner {
+    text-align: center;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+  }
+
+  .cta__inner .lede {
+    margin-inline: auto;
+  }
+
+  .cta .hero__cta {
+    justify-content: center;
+    margin-top: 8px;
+  }
+
+  .cta__mix {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 22px;
+    margin-top: 26px;
+    padding-top: 24px;
+    border-top: 1px solid var(--seam);
+    width: min(100%, 640px);
+    color: var(--faint);
+    font-size: 0.9rem;
+  }
+</style>

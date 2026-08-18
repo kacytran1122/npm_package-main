@@ -1,0 +1,755 @@
+---
+import Base from "../layouts/Base.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+
+/*
+ * The numbers here come from `npm run bench` in packages/sdk, run on Node 24
+ * with ICU 78.3. They are transcribed rather than computed at build time on
+ * purpose: the ICU baseline column cannot be reproduced without running the
+ * comparison on a specific runtime, and a number that quietly changes with
+ * whichever machine built the site is not a benchmark.
+ *
+ * Source of truth: packages/sdk/docs/segmentation.md
+ */
+
+const RUNTIME = "Node 24.18, ICU 78.3, Unicode 17.0";
+
+const accuracy = [
+  { locale: "th", name: "Thai", intl: 95.5, rules: 52.4, lexical: 92.6 },
+  { locale: "lo", name: "Lao", intl: 93.0, rules: 58.5, lexical: 100.0 },
+  { locale: "km", name: "Khmer", intl: 93.0, rules: 55.1, lexical: 97.4 },
+  { locale: "my", name: "Burmese", intl: 97.0, rules: 82.3, lexical: 98.1 },
+  { locale: "zh-Hans-SG", name: "Chinese", intl: 88.9, rules: 78.0, lexical: 96.3 },
+];
+
+const macro = { intl: 93.5, rules: 65.3, lexical: 96.9 };
+
+const safety = [
+  { locale: "th", offsets: 498, illegal: 99, reason: "orphaned trailing vowel ×62" },
+  { locale: "lo", offsets: 263, illegal: 60, reason: "orphaned trailing vowel ×46" },
+  { locale: "km", offsets: 205, illegal: 0, reason: "— on ICU 78; 44 on ICU 76" },
+  { locale: "my", offsets: 279, illegal: 130, reason: "coda split from syllable ×66" },
+  { locale: "zh-Hans-SG", offsets: 122, illegal: 0, reason: "—" },
+];
+
+const throughput = [
+  { locale: "th", intl: 27895, rules: 5920, lexical: 3777 },
+  { locale: "lo", intl: 26515, rules: 6540, lexical: 4640 },
+  { locale: "km", intl: 31489, rules: 7311, lexical: 4636 },
+  { locale: "my", intl: 27317, rules: 7982, lexical: 6459 },
+  { locale: "zh-Hans-SG", intl: 11369, rules: 6815, lexical: 4700 },
+];
+
+const footprint = [
+  { target: "Locale registry (shared baseline)", min: "10.0", gzip: "2.3", marginal: "—" },
+  { target: "Rules only", min: "15.3", gzip: "4.6", marginal: "+2.3" },
+  { target: "With lexicon (shipped default)", min: "46.0", gzip: "12.3", marginal: "+10.0" },
+  { target: "Whole package entry point", min: "82.8", gzip: "24.9", marginal: "—" },
+];
+
+const pct = (n: number) => n.toFixed(1);
+const num = (n: number) => n.toLocaleString("en-US");
+---
+
+<Base
+  title="Segmentation benchmarks — selakata"
+  description="Why selakata does not use Intl.Segmenter, measured: boundary F1 against a held-out corpus, illegal cut points, cross-ICU determinism, throughput, and bundle size."
+>
+  <section class="section section--flush head">
+    <div class="shell">
+      <p class="eyebrow">Evaluation · {RUNTIME}</p>
+      <h1>Why this package does not use <code class="h-code">Intl.Segmenter</code></h1>
+      <p class="lede">
+        Word breaking is the load-bearing decision in this library, and until
+        recently it was delegated to the platform. That is the obvious move and
+        it is what every JavaScript i18n library does. It is also wrong here, for
+        reasons that are measurable rather than aesthetic.
+      </p>
+      <p class="lede">
+        Three implementations of the same interface were built and measured on
+        identical data. This page is the result; the method, the corpus, and the
+        limitations are in the repository.
+      </p>
+
+      <div class="head__cta">
+        <a
+          class="btn btn--ghost"
+          href="https://github.com/kacytran1122/selakata/blob/main/packages/sdk/docs/segmentation.md"
+          rel="noopener">Full writeup</a
+        >
+        <a
+          class="btn btn--ghost"
+          href="https://github.com/kacytran1122/selakata/blob/main/packages/sdk/bench/data/corpus.json"
+          rel="noopener">Annotated corpus</a
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================================== approaches -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">What was compared</p>
+        <h2>Three approaches, one interface</h2>
+      </div>
+
+      <div class="grid grid--3">
+        <article class="panel approach">
+          <span class="approach__key">A</span>
+          <h3>Intl.Segmenter</h3>
+          <p class="muted">
+            Delegate to the host's ICU. The previous behaviour and the baseline.
+            It lives in the benchmark harness, not in the package — shipping it
+            would put the dependency back.
+          </p>
+        </article>
+        <article class="panel approach">
+          <span class="approach__key">B</span>
+          <h3>Orthographic rules</h3>
+          <p class="muted">
+            UAX #29 grapheme clusters implemented from the rule set, then
+            tailored per script: Thai and Lao leading vowels attach rightwards,
+            Khmer coeng stacks hold, Burmese asat marks a coda. No data at all.
+          </p>
+        </article>
+        <article class="panel approach approach--on">
+          <span class="approach__key">C</span>
+          <h3>Lexical Viterbi</h3>
+          <p class="muted">
+            A unigram cost search over B's cluster lattice against a curated
+            lexicon, falling back to B for anything unrecognised. This is what
+            ships.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== accuracy -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Accuracy</p>
+        <h2>Boundary F1 on held-out data</h2>
+        <p class="lede">
+          The corpus is hand-annotated and split in two. The lexicon was checked
+          against the dev half only — no entry was added because of a test
+          sentence, and no constant was tuned against one. These are the test-half
+          numbers.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Locale</th>
+              <th scope="col">A · Intl.Segmenter</th>
+              <th scope="col">B · rules only</th>
+              <th scope="col">C · lexical</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              accuracy.map((r) => {
+                const best = Math.max(r.intl, r.rules, r.lexical);
+                return (
+                  <tr>
+                    <th scope="row">
+                      <code>{r.locale}</code> <span class="muted">{r.name}</span>
+                    </th>
+                    <td class={r.intl === best ? "win" : ""}>{pct(r.intl)}</td>
+                    <td class={r.rules === best ? "win" : ""}>{pct(r.rules)}</td>
+                    <td class={r.lexical === best ? "win" : ""}>{pct(r.lexical)}</td>
+                  </tr>
+                );
+              })
+            }
+            <tr class="total">
+              <th scope="row">Macro average</th>
+              <td>{pct(macro.intl)}</td>
+              <td>{pct(macro.rules)}</td>
+              <td class="win">{pct(macro.lexical)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="note">
+        Where C loses, it loses to Thai by 2.9 points, and the losses are compound
+        boundaries: ICU's Thai dictionary knows tens of thousands of words and
+        this lexicon knows 264. Where C wins it wins on recall, because ICU's
+        Khmer and Chinese dictionaries miss words a small well-chosen lexicon
+        happens to hold. <code>registerWords()</code> closes the Thai gap for any
+        specific application immediately.
+      </p>
+    </div>
+  </section>
+
+  <!-- ==================================================== determinism -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Determinism</p>
+        <h2>The platform's answer moves with the host's ICU version</h2>
+        <p class="lede">
+          This is the finding that turns into a production bug rather than a
+          support-matrix footnote. The same 220 segmentations, run on Node 22 and
+          Node 24:
+        </p>
+      </div>
+
+      <div class="diff">
+        <div class="diff__stat">
+          <strong>19 / 220</strong>
+          <span>segmentations differ between ICU 76.1 and ICU 78.3</span>
+        </div>
+        <div class="diff__stat diff__stat--good">
+          <strong>0 / 220</strong>
+          <span>differ with this package, across ICU 76, 77, and 78</span>
+        </div>
+      </div>
+
+      <div class="sample">
+        <p class="sample__label">
+          <code>ខ្ញុំស្រឡាញ់</code> — grapheme clusters, same code, same input
+        </p>
+        <div class="sample__row">
+          <span class="sample__tag sample__tag--bad">ICU 76.1</span>
+          <span lang="km" class="sample__text">ខ្|ញុំ|ស្|រ|ឡា|ញ់</span>
+        </div>
+        <div class="sample__row">
+          <span class="sample__tag">ICU 78.3</span>
+          <span lang="km" class="sample__text">ខ្ញុំ|ស្រ|ឡា|ញ់</span>
+        </div>
+      </div>
+
+      <p class="note">
+        ICU 76 pulls the Khmer coeng stacks apart; ICU 78 does not. For an
+        application that renders on the server and hydrates in the browser, that
+        is an HTML mismatch on any string that was truncated or measured. It also
+        means a snapshot test passes on one CI runner and fails on another. This
+        package has no version-dependent data because it has no external data.
+      </p>
+    </div>
+  </section>
+
+  <!-- ========================================================= safety -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Cut safety</p>
+        <h2>Where a truncation is allowed to land</h2>
+        <p class="lede">
+          <code>truncate()</code> and <code>graphemeLength()</code> cut at cluster
+          boundaries. UAX #29 is an encoding-level algorithm and deliberately says
+          nothing about orthography, so some of the boundaries it offers are
+          places no reader accepts a cut — a Thai leading vowel left dangling, a
+          Burmese syllable split from its coda.
+        </p>
+        <p class="lede">
+          Judged by a checker written from the Unicode properties, sharing no code
+          with the implementation, so a bug in the cluster rules cannot score
+          itself as correct.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Locale</th>
+              <th scope="col">Offsets offered by Intl</th>
+              <th scope="col">Illegal</th>
+              <th scope="col">Rate</th>
+              <th scope="col">This package</th>
+              <th scope="col">Most common reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              safety.map((r) => (
+                <tr>
+                  <th scope="row"><code>{r.locale}</code></th>
+                  <td>{num(r.offsets)}</td>
+                  <td class={r.illegal > 0 ? "bad" : ""}>{r.illegal}</td>
+                  <td class={r.illegal > 0 ? "bad" : ""}>
+                    {pct((r.illegal / r.offsets) * 100)}%
+                  </td>
+                  <td class="win">0 · 0.0%</td>
+                  <td class="muted">{r.reason}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <p class="note">
+        Khmer reads zero on ICU 78. On Node 20 and Node 22 the same table reports
+        44 illegal offsets, 17.7%, all of them coeng stacks coming apart — the
+        defect rate is a property of the runtime, not of the input.
+        <code>Intl.Segmenter</code>'s <em>word</em> boundaries, by contrast, are
+        legal everywhere. The problem is specific to grapheme granularity, and
+        grapheme granularity is what truncation uses.
+      </p>
+    </div>
+  </section>
+
+  <!-- =================================================== availability -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Availability</p>
+        <h2>On a host with no ICU there is nothing to delegate to</h2>
+      </div>
+
+      <div class="grid grid--3">
+        <article class="panel avail avail--bad">
+          <h3>Intl.Segmenter</h3>
+          <p class="avail__verdict">Throws</p>
+          <p class="muted">
+            Absent on React Native's Hermes, on Node built with
+            <code>small-icu</code> or <code>--without-intl</code>, and on several
+            embedded and edge runtimes. No feature detect helps: the alternative
+            to a working segmenter was an exception.
+          </p>
+        </article>
+        <article class="panel avail">
+          <h3>Rules only</h3>
+          <p class="avail__verdict avail__verdict--ok">Works</p>
+          <p class="muted">No data, no platform dependency.</p>
+        </article>
+        <article class="panel avail">
+          <h3>Lexical</h3>
+          <p class="avail__verdict avail__verdict--ok">Works</p>
+          <p class="muted">
+            The shipped default. Measured by deleting the global and re-running
+            the suite, which is a test in the package.
+          </p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================================================== throughput -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Cost</p>
+        <h2>What it costs in time and in bytes</h2>
+        <p class="lede">
+          ICU is C++ and is roughly five to seven times faster. Delegating to it
+          also costs zero bytes. Both are real, and both are on the table here.
+        </p>
+      </div>
+
+      <div class="cost">
+        <div>
+          <h3 class="cost__title">Throughput, characters per millisecond</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Locale</th>
+                  <th scope="col">A</th>
+                  <th scope="col">B</th>
+                  <th scope="col">C</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  throughput.map((r) => (
+                    <tr>
+                      <th scope="row"><code>{r.locale}</code></th>
+                      <td>{num(r.intl)}</td>
+                      <td>{num(r.rules)}</td>
+                      <td>{num(r.lexical)}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            In absolute terms C segments a 60-character interface string in about
+            16 microseconds and a 2,000-character paragraph in about half a
+            millisecond. For labels, buttons, and paragraphs at render time that
+            is not a number anyone can perceive. It would matter for bulk corpus
+            processing, which is not what an i18n SDK does.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="cost__title">Bundle, minified and gzipped</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">Target</th>
+                  <th scope="col">min</th>
+                  <th scope="col">gzip</th>
+                  <th scope="col">marginal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {
+                  footprint.map((r) => (
+                    <tr>
+                      <th scope="row">{r.target}</th>
+                      <td>{r.min} KB</td>
+                      <td>{r.gzip} KB</td>
+                      <td class={r.marginal !== "—" ? "win" : "muted"}>{r.marginal}</td>
+                    </tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </div>
+          <p class="note">
+            The lexicons are 7.7 KB gzipped of that, about 220 entries per
+            language. An application that only needs line breaking can drop them:
+          </p>
+          <CodeBlock
+            code={`import { setSegmentationEngine, orthographicEngine } from "selakata";
+
+// 2.3 KB gzipped instead of 10. Breaks and truncations stay
+// safe; word counts get coarse.
+setSegmentationEngine(orthographicEngine);`}
+            label="Trading accuracy for size"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================= decision -->
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">The decision</p>
+        <h2>C ships, with B as a supported opt-out</h2>
+      </div>
+
+      <ul class="reasons">
+        <li>
+          <strong>More accurate than the baseline</strong> on held-out data, 96.9
+          against 93.5 macro F1, winning four locales of five.
+        </li>
+        <li>
+          <strong>Available</strong>, which the baseline is not on Hermes or any
+          ICU-less runtime.
+        </li>
+        <li>
+          <strong>Deterministic.</strong> Identical output on ICU 76, 77, and 78,
+          where the baseline changed its answer on 8.6% of inputs. For a library
+          used in server rendering this is a correctness property, not a nicety.
+        </li>
+        <li>
+          <strong>Its cuts are always legal</strong>, where the baseline's grapheme
+          boundaries are illegal on 20% of Thai offsets, 23% of Lao, 47% of
+          Burmese, and — depending on the runtime — 18% of Khmer.
+        </li>
+        <li>
+          <strong>Affordable.</strong> 10 KB gzipped and roughly 16 microseconds
+          per interface string.
+        </li>
+      </ul>
+
+      <div class="limits">
+        <h3>What these numbers do not show</h3>
+        <ul>
+          <li>
+            The corpus is 125 sentences across five languages, annotated by the
+            author against ordinary orthographic practice rather than a published
+            standard. Large enough to separate these approaches; too small to
+            publish as a ranking.
+          </li>
+          <li>
+            Word segmentation in these languages has no single correct answer at
+            the margins. Thai compounds and Burmese particles are judgement calls.
+            The gap between approaches on identical data is the trustworthy part.
+          </li>
+          <li>
+            The lexicons are hand-curated and cover roughly 220 common forms per
+            language. They are not a dictionary.
+          </li>
+          <li>
+            <code>Intl.PluralRules</code>, <code>Intl.NumberFormat</code>, and
+            <code>Intl.DateTimeFormat</code> were deliberately kept. They are
+            CLDR-exact lookups, and their cross-version updates are a feature.
+            Segmentation is a judgement, which is why it moved in-house.
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .head {
+    padding-block: clamp(56px, 6vw, 92px) 0;
+  }
+
+  .head .lede {
+    margin-top: 20px;
+  }
+
+  .h-code {
+    font-size: 0.72em;
+    color: var(--jade);
+    letter-spacing: 0;
+  }
+
+  .head__cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 11px;
+    margin-top: 30px;
+  }
+
+  /* ------------------------------------------------------- approaches */
+
+  .approach__key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px solid var(--seam-strong);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .approach--on {
+    border-color: rgb(47 211 180 / 34%);
+  }
+
+  .approach--on .approach__key {
+    background: var(--jade);
+    border-color: var(--jade);
+    color: #04120f;
+  }
+
+  .panel p {
+    margin-top: 11px;
+    font-size: 0.92rem;
+  }
+
+  /* ------------------------------------------------------------ table */
+
+  .win {
+    color: var(--jade);
+    font-weight: 550;
+  }
+
+  .bad {
+    color: var(--ember);
+  }
+
+  td {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .total th,
+  .total td {
+    border-top: 1px solid var(--seam-strong);
+    font-weight: 600;
+  }
+
+  .note {
+    margin-top: 22px;
+    max-width: 74ch;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+
+  .note code,
+  .limits code {
+    color: var(--jade);
+  }
+
+  /* ------------------------------------------------------ determinism */
+
+  .diff {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 16px;
+    margin-bottom: 30px;
+  }
+
+  .diff__stat {
+    padding: 24px 26px;
+    border: 1px solid rgb(240 163 92 / 30%);
+    border-radius: var(--radius);
+    background: var(--raised);
+  }
+
+  .diff__stat--good {
+    border-color: rgb(47 211 180 / 30%);
+  }
+
+  .diff__stat strong {
+    display: block;
+    font-size: 2rem;
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    color: var(--ember);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .diff__stat--good strong {
+    color: var(--jade);
+  }
+
+  .diff__stat span {
+    display: block;
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .sample {
+    border: 1px solid var(--seam);
+    border-radius: var(--radius);
+    background: var(--raised);
+    padding: 20px 22px;
+  }
+
+  .sample__label {
+    color: var(--faint);
+    font-size: 0.86rem;
+    margin-bottom: 14px;
+  }
+
+  .sample__label code {
+    font-family: var(--khmer);
+    color: var(--text);
+  }
+
+  .sample__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    padding: 11px 0;
+    border-top: 1px solid var(--seam);
+  }
+
+  .sample__tag {
+    flex: none;
+    width: 84px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--jade);
+  }
+
+  .sample__tag--bad {
+    color: var(--ember);
+  }
+
+  .sample__text {
+    font-family: var(--khmer);
+    font-size: 1.35rem;
+    line-height: 1.9;
+  }
+
+  /* ----------------------------------------------------- availability */
+
+  .avail__verdict {
+    font-size: 1.5rem;
+    font-weight: 620;
+    letter-spacing: -0.03em;
+    color: var(--ember);
+    margin-top: 8px;
+  }
+
+  .avail__verdict--ok {
+    color: var(--jade);
+  }
+
+  /* ------------------------------------------------------------- cost */
+
+  .cost {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+    gap: 44px;
+    align-items: start;
+  }
+
+  .cost > * {
+    min-width: 0;
+  }
+
+  .cost__title {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+
+  .cost .table-wrap table {
+    min-width: 340px;
+  }
+
+  .cost .code {
+    margin-top: 16px;
+  }
+
+  /* --------------------------------------------------------- decision */
+
+  .reasons {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0;
+    border-top: 1px solid var(--seam);
+    max-width: 82ch;
+  }
+
+  .reasons li {
+    padding: 18px 0 18px 22px;
+    border-bottom: 1px solid var(--seam);
+    border-left: 1px solid var(--jade-dim);
+    color: var(--muted);
+    font-size: 0.96rem;
+  }
+
+  .reasons strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .limits {
+    margin-top: 52px;
+    padding: 26px;
+    border: 1px solid var(--seam);
+    border-left: 2px solid var(--ember);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    background: var(--raised);
+    max-width: 82ch;
+  }
+
+  .limits h3 {
+    margin-bottom: 14px;
+  }
+
+  .limits ul {
+    margin: 0;
+    padding-left: 20px;
+    display: grid;
+    gap: 11px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.7;
+  }
+</style>

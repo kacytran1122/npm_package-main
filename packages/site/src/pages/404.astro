@@ -1,0 +1,64 @@
+---
+import Base from "../layouts/Base.astro";
+import { LOCALE_CODES } from "selakata";
+---
+
+<Base
+  title="Not found — selakata"
+  description="That page does not exist."
+>
+  <section class="section section--flush nf">
+    <div class="shell">
+      <p class="eyebrow">404</p>
+      <h1>No page here</h1>
+      <p class="lede">
+        The link is wrong or the page moved. Everything the site has is one of
+        these three.
+      </p>
+      <ul class="nf__links">
+        <li><a href="/">Home — what the package does</a></li>
+        <li><a href="/languages/">Languages — all {LOCALE_CODES.length} locales</a></li>
+        <li><a href="/benchmarks/">Benchmarks — the segmentation evaluation</a></li>
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    padding-block: clamp(72px, 12vw, 160px) clamp(72px, 12vw, 160px);
+  }
+
+  .nf .lede {
+    margin-top: 20px;
+  }
+
+  .nf__links {
+    list-style: none;
+    margin: 36px 0 0;
+    padding: 0;
+    border-top: 1px solid var(--seam);
+    max-width: 52ch;
+  }
+
+  .nf__links li {
+    border-bottom: 1px solid var(--seam);
+  }
+
+  .nf__links a {
+    display: block;
+    padding: 16px 0 16px 18px;
+    border-left: 1px solid transparent;
+    color: var(--muted);
+    transition:
+      color 0.18s var(--step),
+      border-color 0.18s var(--step),
+      padding-left 0.18s var(--step);
+  }
+
+  .nf__links a:hover {
+    color: var(--text);
+    border-left-color: var(--jade);
+    padding-left: 24px;
+  }
+</style>

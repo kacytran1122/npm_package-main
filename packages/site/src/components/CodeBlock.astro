@@ -1,0 +1,49 @@
+---
+import { Code } from "astro:components";
+
+interface Props {
+  code: string;
+  lang?: "ts" | "tsx" | "bash" | "json" | "css";
+  label?: string;
+  note?: string;
+}
+
+const { code, lang = "ts", label, note } = Astro.props;
+---
+
+<div class="code">
+  {
+    (label || note) && (
+      <div class="code__bar">
+        <span>{label}</span>
+        {note && <span class="code__note">{note}</span>}
+      </div>
+    )
+  }
+  <Code code={code.trim()} lang={lang} theme="vesper" />
+</div>
+
+<style is:global>
+  /* Shiki inlines its own background; the panel owns that decision here. */
+  .code .astro-code,
+  .code .astro-code span {
+    background: transparent !important;
+  }
+
+  .code .astro-code {
+    margin: 0;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-size: 0.83rem;
+    line-height: 1.75;
+  }
+</style>
+
+<style>
+  .code__note {
+    color: var(--jade-dim);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.72rem;
+  }
+</style>

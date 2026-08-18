@@ -1,0 +1,436 @@
+---
+import Base from "../layouts/Base.astro";
+import {
+  COUNTRIES,
+  LOCALES,
+  LOCALE_CODES,
+  fallbackChain,
+  formatCurrency,
+  formatDate,
+  localesForCountry,
+} from "selakata";
+
+/*
+ * Every row is read out of the locale registry at build time. There is no
+ * second copy of this table to drift out of date — if a locale is added to the
+ * package, it appears here on the next build.
+ */
+
+const SCRIPT_NAMES: Record<string, string> = {
+  Latn: "Latin",
+  Thai: "Thai",
+  Laoo: "Lao",
+  Khmr: "Khmer",
+  Mymr: "Myanmar",
+  Arab: "Arabic",
+  Hans: "Han (Simplified)",
+  Taml: "Tamil",
+  Java: "Javanese",
+};
+
+const FONT_VAR: Record<string, string> = {
+  Thai: "var(--thai)",
+  Khmr: "var(--khmer)",
+  Mymr: "var(--myanmar)",
+  Laoo: "var(--lao)",
+  Arab: "var(--jawi)",
+};
+
+const sample = new Date("2026-08-18T00:00:00Z");
+const countries = Object.values(COUNTRIES);
+const rtl = LOCALE_CODES.filter((c) => LOCALES[c].dir === "rtl");
+const unspaced = LOCALE_CODES.filter((c) => LOCALES[c].wordSpaced === false);
+const mixed = LOCALE_CODES.filter((c) => LOCALES[c].codeMixed);
+const buddhist = LOCALE_CODES.filter((c) => LOCALES[c].calendar === "buddhist");
+---
+
+<Base
+  title="Languages — selakata"
+  description="All 29 locales across 12 Southeast Asian countries: script, direction, calendar, currency, numbering system, and fallback chain."
+>
+  <section class="section section--flush head">
+    <div class="shell">
+      <p class="eyebrow">{LOCALE_CODES.length} locales · {countries.length} countries</p>
+      <h1>Every locale, and what makes it different</h1>
+      <p class="lede">
+        Southeast Asia is usually counted as eleven sovereign states. Papua New
+        Guinea is the twelfth here because it shares a land border with Indonesia
+        and holds ASEAN observer status. If your definition excludes it, ignore
+        the PG rows.
+      </p>
+
+      <dl class="facts">
+        <div>
+          <dd>{unspaced.length}</dd>
+          <dt>Written without spaces</dt>
+        </div>
+        <div>
+          <dd>{rtl.length}</dd>
+          <dt>Right to left</dt>
+        </div>
+        <div>
+          <dd>{buddhist.length}</dd>
+          <dt>Buddhist Era calendar</dt>
+        </div>
+        <div>
+          <dd>{mixed.length}</dd>
+          <dt>Code-mixed varieties</dt>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">The registry</p>
+        <h2>All {LOCALE_CODES.length} locales</h2>
+        <p class="lede">
+          The fallback chain is the column worth reading twice. A Javanese
+          speaker gets Indonesian before English; Lao falls back to Thai; Cebuano
+          to Filipino. Falling straight to English is a choice, and usually the
+          wrong one.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Code</th>
+              <th scope="col">Language</th>
+              <th scope="col">Script</th>
+              <th scope="col">Dir</th>
+              <th scope="col">Calendar</th>
+              <th scope="col">Currency</th>
+              <th scope="col">Fallback chain</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              LOCALE_CODES.map((code) => {
+                const l = LOCALES[code];
+                return (
+                  <tr>
+                    <td><code>{code}</code></td>
+                    <td>
+                      <span
+                        class="native"
+                        lang={code}
+                        dir={l.dir}
+                        style={FONT_VAR[l.script] ? `font-family:${FONT_VAR[l.script]}` : undefined}
+                      >
+                        {l.nativeName}
+                      </span>
+                      <span class="latin">{l.name}</span>
+                    </td>
+                    <td>
+                      {SCRIPT_NAMES[l.script] ?? l.script}
+                      {l.wordSpaced === false && <span class="pill">no spaces</span>}
+                    </td>
+                    <td>
+                      {l.dir === "rtl" ? <span class="pill pill--warn">rtl</span> : "ltr"}
+                    </td>
+                    <td>{l.calendar === "buddhist" ? "Buddhist Era" : "Gregorian"}</td>
+                    <td><code>{l.defaultCurrency}</code></td>
+                    <td class="chain">
+                      {fallbackChain(code).map((step, i) => (
+                        <>
+                          {i > 0 && <span class="chain__arrow">→</span>}
+                          <code>{step}</code>
+                        </>
+                      ))}
+                    </td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Formatting</p>
+        <h2>The same date and the same price, everywhere</h2>
+        <p class="lede">
+          One value, formatted for each locale by <code>formatDate()</code> and
+          <code>formatCurrency()</code>. Thai reads 2569 because Thailand uses the
+          Buddhist Era, and the dong, rupiah, riel, kip, and kyat carry no
+          decimals because nobody quotes them with any.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Locale</th>
+              <th scope="col">18 August 2026</th>
+              <th scope="col">Native digits</th>
+              <th scope="col">1,500,000 in local currency</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              LOCALE_CODES.filter((c) => !LOCALES[c].codeMixed).map((code) => {
+                const l = LOCALES[code];
+                const style = FONT_VAR[l.script]
+                  ? `font-family:${FONT_VAR[l.script]}`
+                  : undefined;
+                return (
+                  <tr>
+                    <td><code>{code}</code></td>
+                    <td lang={code} style={style}>
+                      {formatDate(sample, code, { dateStyle: "long" })}
+                    </td>
+                    <td lang={code} style={style}>
+                      {l.nativeDigits
+                        ? formatDate(sample, code, { dateStyle: "long", nativeDigits: true })
+                        : <span class="muted">—</span>}
+                    </td>
+                    <td lang={code} style={style}>{formatCurrency(1500000, code)}</td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">By country</p>
+        <h2>What to offer, and what to default to</h2>
+        <p class="lede">
+          A phone bought in Cambodia often reports <code>en-US</code> while its
+          owner reads Khmer, so <code>localeFromRequest()</code> lets the country
+          beat <code>Accept-Language</code>. These are the lists it draws on.
+        </p>
+      </div>
+
+      <div class="grid grid--3">
+        {
+          countries.map((country) => (
+            <article class="panel country">
+              <header>
+                <h3>{country.name}</h3>
+                <code>{country.code}</code>
+              </header>
+              <ul>
+                {localesForCountry(country.code).map((code) => (
+                  <li>
+                    <code>{code}</code>
+                    <span
+                      lang={code}
+                      dir={LOCALES[code].dir}
+                      style={
+                        FONT_VAR[LOCALES[code].script]
+                          ? `font-family:${FONT_VAR[LOCALES[code].script]}`
+                          : undefined
+                      }
+                    >
+                      {LOCALES[code].nativeName}
+                    </span>
+                    {code === country.defaultLocale && <span class="pill">default</span>}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <p class="eyebrow">Corrections welcome</p>
+        <h2>Some of this is exact and some is curated</h2>
+      </div>
+      <div class="grid grid--3">
+        <article class="panel">
+          <h3>Exact</h3>
+          <p class="muted">
+            Locale metadata, currencies, calendars, plural rules, and Vietnamese
+            normalization sit on CLDR and <code>Intl</code>. Lookups with a
+            published right answer.
+          </p>
+        </article>
+        <article class="panel">
+          <h3>Measured</h3>
+          <p class="muted">
+            Segmentation is the package's own, evaluated against a hand-annotated
+            corpus with a held-out split. <a href="/benchmarks/">See the numbers</a>.
+          </p>
+        </article>
+        <article class="panel">
+          <h3>Curated</h3>
+          <p class="muted">
+            Classifier tables, pronouns, and politeness particles are compiled by
+            hand. They cover common usage. They are not a full grammar, and a
+            native reviewer should still check your copy.
+          </p>
+        </article>
+      </div>
+      <p class="foot-note">
+        Corrections in any of the {LOCALE_CODES.length} locales are treated as bugs.
+        <a href="https://github.com/kacytran1122/selakata/issues/new" rel="noopener">
+          Open an issue →
+        </a>
+      </p>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .head {
+    padding-block: clamp(56px, 6vw, 92px) 0;
+  }
+
+  .head .lede {
+    margin-top: 20px;
+  }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    margin: 48px 0 0;
+    border-top: 1px solid var(--seam);
+  }
+
+  .facts > div {
+    padding: 24px 22px;
+    border-left: 1px solid var(--seam);
+  }
+
+  .facts > div:first-child {
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .facts dd {
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 620;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+
+  .facts dt {
+    margin-top: 9px;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .native {
+    display: block;
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+
+  .latin {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--faint);
+  }
+
+  .pill {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid rgb(47 211 180 / 32%);
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+    color: var(--jade);
+    vertical-align: middle;
+  }
+
+  .pill--warn {
+    border-color: rgb(240 163 92 / 38%);
+    color: var(--ember);
+  }
+
+  .chain {
+    white-space: nowrap;
+  }
+
+  .chain__arrow {
+    color: var(--faint);
+    margin-inline: 5px;
+  }
+
+  td code,
+  .country code {
+    color: var(--jade);
+    font-size: 0.8rem;
+  }
+
+  .country header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 13px;
+    margin-bottom: 13px;
+    border-bottom: 1px solid var(--seam);
+  }
+
+  .country ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 9px;
+  }
+
+  .country li {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 0.92rem;
+    flex-wrap: wrap;
+  }
+
+  .country li > code {
+    flex: none;
+    min-width: 78px;
+  }
+
+  .foot-note {
+    margin-top: 28px;
+    color: var(--muted);
+    font-size: 0.92rem;
+  }
+
+  .foot-note a,
+  .panel a {
+    color: var(--jade);
+  }
+
+  .foot-note a:hover,
+  .panel a:hover {
+    text-decoration: underline;
+  }
+
+  .panel p {
+    margin-top: 11px;
+    font-size: 0.92rem;
+  }
+
+  .panel code {
+    color: var(--jade);
+  }
+</style>

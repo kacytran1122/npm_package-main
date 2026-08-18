@@ -37,6 +37,13 @@ chmod +x deploy.sh
 
 The script builds the images, starts the stack, and polls `/api/v1/health` until the API answers. Dashboard on port 80, API under `/api/v1`.
 
+The documentation site is not part of that stack. It is static, has no backend, and sits behind a compose profile so `deploy.sh` starts exactly what it always did:
+
+```bash
+docker compose -f docker-compose.prod.yml --profile site up -d site
+# http://localhost:8080, or set SITE_PORT
+```
+
 ## TLS
 
 The stack serves plain HTTP. Terminate TLS in front of it. Caddy is the shortest path:

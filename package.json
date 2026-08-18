@@ -8,8 +8,10 @@
   "scripts": {
     "build": "npm run build -w packages/sdk && npm run build -w packages/server",
     "build:dashboard": "npm run build -w packages/dashboard",
+    "build:site": "npm run build -w packages/site",
+    "dev:site": "npm run dev -w packages/site",
     "pretypecheck": "npm run build -w packages/sdk",
-    "typecheck": "npm run typecheck -w packages/sdk && npm run typecheck -w packages/server && npm run typecheck -w packages/dashboard",
+    "typecheck": "npm run typecheck -w packages/sdk && npm run typecheck -w packages/server && npm run typecheck -w packages/dashboard && npm run typecheck -w packages/site",
     "pretest": "npm run build",
     "test": "npm run test -w packages/sdk && npm run test -w packages/server",
     "bench": "npm run bench -w packages/sdk && npm run bench:footprint -w packages/sdk",

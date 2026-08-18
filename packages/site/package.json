@@ -1,0 +1,26 @@
+{
+  "name": "@selakata/site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Marketing and documentation site for selakata. Astro with React islands, built on the SDK it documents.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "selakata": "*",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/react": "^4.2.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "astro": "^5.2.0",
+    "typescript": "^5.6.0"
+  }
+}

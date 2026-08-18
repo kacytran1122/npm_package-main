@@ -50,9 +50,10 @@ packages/
   sdk/         — React SDK and core library (npm: selakata)
   server/      — Express + MongoDB API
   dashboard/   — React + Vite admin UI
+  site/        — Astro + React marketing and documentation site
 ```
 
-The SDK is standalone and has no runtime dependencies. The server and dashboard are optional; you can use the SDK with plain JSON files and never run either.
+The SDK is standalone and has no runtime dependencies. The server and dashboard are optional; you can use the SDK with plain JSON files and never run either. The site is optional too — it is the public documentation, and it imports the SDK to render its own demos, so it fails to build if the package it documents is broken.
 
 ## Quick start (development)
 
@@ -78,6 +79,7 @@ docker compose up -d mongo
 # 5. Run
 npm run dev:server      # API on :5000
 npm run dev:dashboard   # Dashboard on :5173
+npm run dev:site        # Docs site on :4321
 ```
 
 ## Quick start (Docker, production)
@@ -91,6 +93,11 @@ chmod +x deploy.sh
 ./deploy.sh
 # Dashboard: http://localhost
 # API:       http://localhost/api/v1
+
+# The documentation site is a separate, static, backend-free image behind a
+# compose profile, so the stack above is unchanged unless you ask for it:
+docker compose -f docker-compose.prod.yml --profile site up -d site
+# Site: http://localhost:8080   (override with SITE_PORT)
 ```
 
 See [DEPLOY.md](DEPLOY.md) for TLS, backups, and upgrades.

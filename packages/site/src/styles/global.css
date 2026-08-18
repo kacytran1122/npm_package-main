@@ -1,0 +1,462 @@
+/*
+ * selakata.dev
+ *
+ * The name is Malay and Indonesian: sela, a gap, and kata, a word. The space
+ * between words — the thing Thai, Khmer, Lao, and Burmese never write down.
+ *
+ * So the seam is the design system. A one-pixel vertical rule marks every
+ * boundary on this page: between words in the hero, between columns in the
+ * comparison, down the side of every panel. It is the product rendered as
+ * structure, and it is the only ornament here.
+ *
+ * The palette is the dashboard's, lifted for a dark ground. The jade is the
+ * dashboard's #0f6e62; the ember is its #b4620a, and it keeps the meaning it
+ * has there — a human still has to look at this. Nothing was invented.
+ */
+
+/* --------------------------------------------------------------- tokens */
+
+:root {
+  --void: #0a0c0b;
+  --raised: #101413;
+  --raised-2: #151a18;
+  --text: #e9eeeb;
+  --muted: #8b9793;
+  /* 4.9:1 on --void and 4.7:1 on --raised. It carries eyebrows, table headers,
+     and captions, all of which are small text, so it has to clear AA. */
+  --faint: #78827e;
+
+  --jade: #2fd3b4;
+  --jade-dim: #1b7f6d;
+  --ember: #f0a35c;
+
+  --seam: rgb(233 238 235 / 10%);
+  --seam-strong: rgb(233 238 235 / 18%);
+  --jade-glow: rgb(47 211 180 / 22%);
+
+  --sans:
+    "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Script faces. These are display type on this site, not a fallback. */
+  --thai: "Noto Sans Thai", var(--sans);
+  --khmer: "Noto Sans Khmer", var(--sans);
+  --myanmar: "Noto Sans Myanmar", var(--sans);
+  --lao: "Noto Sans Lao", var(--sans);
+  --viet: "Be Vietnam Pro", var(--sans);
+  --jawi: "Noto Naskh Arabic", serif;
+
+  --shell: 1180px;
+  --gutter: 24px;
+  --radius: 10px;
+
+  --step: cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* ----------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* The fixed nav must not cover an anchored heading. */
+  scroll-padding-top: 96px;
+  -webkit-text-size-adjust: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  accent-color: var(--jade);
+}
+
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--jade);
+  outline-offset: 3px;
+  border-radius: 3px;
+}
+
+::selection {
+  background: var(--jade-glow);
+  color: var(--text);
+}
+
+/* ------------------------------------------------------------- typography */
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 620;
+  letter-spacing: -0.028em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.1rem);
+}
+
+h2 {
+  font-size: clamp(1.8rem, 1.3rem + 1.9vw, 2.7rem);
+}
+
+h3 {
+  font-size: 1.14rem;
+  letter-spacing: -0.018em;
+  line-height: 1.3;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--mono);
+  font-size: 0.88em;
+  font-variant-ligatures: none;
+}
+
+.lede {
+  font-size: clamp(1.02rem, 0.95rem + 0.35vw, 1.2rem);
+  line-height: 1.65;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/*
+ * The eyebrow doubles as a seam anchor: the rule to its left is the same
+ * one-pixel mark that separates words in the hero.
+ */
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 20px;
+}
+
+.eyebrow::before {
+  content: "";
+  width: 1px;
+  height: 15px;
+  background: var(--jade);
+  flex: none;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.shell {
+  width: 100%;
+  max-width: var(--shell);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: clamp(72px, 8vw, 124px);
+  border-top: 1px solid var(--seam);
+  position: relative;
+}
+
+.section--flush {
+  border-top: 0;
+}
+
+.section-head {
+  max-width: 66ch;
+  margin-bottom: 52px;
+}
+
+.section-head p {
+  margin-top: 16px;
+}
+
+/* --------------------------------------------------------------- surfaces */
+
+/*
+ * Every panel carries the seam on its leading edge. On a card grid the seams
+ * line up into a column rule, which is the whole idea: the boundary is the
+ * structure.
+ */
+.panel {
+  background: var(--raised);
+  border: 1px solid var(--seam);
+  border-radius: var(--radius);
+  padding: 26px;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    var(--jade-glow) 22%,
+    var(--jade-glow) 78%,
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.4s var(--step);
+}
+
+.panel:hover::before,
+.panel:focus-within::before {
+  opacity: 1;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid--2 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.grid--3 {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 268px), 1fr));
+}
+
+/* --------------------------------------------------------------- controls */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 19px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.93rem;
+  font-weight: 550;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.18s var(--step),
+    background-color 0.18s var(--step),
+    border-color 0.18s var(--step);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn--primary {
+  background: var(--jade);
+  color: #04120f;
+}
+
+.btn--primary:hover {
+  background: #45e0c3;
+}
+
+.btn--ghost {
+  border-color: var(--seam-strong);
+  color: var(--text);
+  background: transparent;
+}
+
+.btn--ghost:hover {
+  border-color: var(--jade-dim);
+  background: var(--raised);
+}
+
+/* ------------------------------------------------------------------- code */
+
+/*
+ * `min-width: 0` matters more than it looks. A grid or flex track sized `1fr`
+ * takes its minimum from the content, and a <pre> reports its longest line as
+ * min-content even when it scrolls — so without this a single long code line
+ * widens the whole page on a phone.
+ */
+.code {
+  background: var(--raised);
+  border: 1px solid var(--seam);
+  border-radius: var(--radius);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.code__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--seam);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.code pre {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-size: 0.83rem;
+  line-height: 1.75;
+}
+
+.code .t-key {
+  color: #8fd3ff;
+}
+.code .t-str {
+  color: var(--jade);
+}
+.code .t-com {
+  color: var(--faint);
+  font-style: italic;
+}
+.code .t-fn {
+  color: #e6c07b;
+}
+.code .t-punc {
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ table */
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--seam);
+  border-radius: var(--radius);
+  background: var(--raised);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  min-width: 620px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--seam);
+  /* The column rule is the seam again. */
+  border-right: 1px solid var(--seam);
+}
+
+th:last-child,
+td:last-child {
+  border-right: 0;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+thead th {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 500;
+  background: var(--raised-2);
+}
+
+/* ------------------------------------------------------------------ misc */
+
+.yes {
+  color: var(--jade);
+}
+.no {
+  color: var(--faint);
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--seam-strong);
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.skip {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip:focus {
+  width: auto;
+  height: auto;
+  clip-path: none;
+  left: 16px;
+  top: 16px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--jade);
+  color: #04120f;
+  border-radius: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

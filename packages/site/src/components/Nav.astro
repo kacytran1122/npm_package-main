@@ -1,0 +1,113 @@
+---
+const links = [
+  { href: "/#problem", label: "Why" },
+  { href: "/#features", label: "Features" },
+  { href: "/#playground", label: "Playground" },
+  { href: "/languages/", label: "Languages" },
+  { href: "/benchmarks/", label: "Benchmarks" },
+];
+---
+
+<header class="nav">
+  <div class="shell nav__inner">
+    <a class="brand" href="/" aria-label="selakata, home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__word">selakata</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Primary">
+      {links.map((l) => <a href={l.href}>{l.label}</a>)}
+    </nav>
+
+    <a
+      class="nav__gh"
+      href="https://github.com/kacytran1122/selakata"
+      rel="noopener"
+    >
+      GitHub
+    </a>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--seam);
+    background: color-mix(in srgb, var(--void) 82%, transparent);
+    backdrop-filter: blur(14px);
+  }
+
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    height: 62px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    font-size: 1.02rem;
+    flex: none;
+  }
+
+  /*
+   * The wordmark carries the seam: a lit rule where the space between words
+   * would be, which is what the package is named after.
+   */
+  .brand__mark {
+    width: 1px;
+    height: 17px;
+    background: var(--jade);
+    box-shadow: 0 0 9px var(--jade-glow);
+  }
+
+  .nav__links {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-left: auto;
+    font-size: 0.92rem;
+    color: var(--muted);
+  }
+
+  .nav__links a {
+    transition: color 0.18s var(--step);
+  }
+
+  .nav__links a:hover {
+    color: var(--text);
+  }
+
+  .nav__gh {
+    flex: none;
+    padding: 7px 14px;
+    border: 1px solid var(--seam-strong);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    transition:
+      border-color 0.18s var(--step),
+      background-color 0.18s var(--step);
+  }
+
+  .nav__gh:hover {
+    border-color: var(--jade-dim);
+    background: var(--raised);
+  }
+
+  @media (max-width: 800px) {
+    .nav__links {
+      display: none;
+    }
+
+    .nav__gh {
+      margin-left: auto;
+    }
+  }
+</style>

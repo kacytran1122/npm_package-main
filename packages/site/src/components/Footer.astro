@@ -1,0 +1,173 @@
+---
+const columns = [
+  {
+    title: "Package",
+    links: [
+      { label: "Quickstart", href: "/#install" },
+      { label: "Playground", href: "/#playground" },
+      { label: "Languages", href: "/languages/" },
+      { label: "npm", href: "https://www.npmjs.com/package/selakata" },
+    ],
+  },
+  {
+    title: "Segmentation",
+    links: [
+      { label: "Benchmarks", href: "/benchmarks/" },
+      { label: "Evaluation writeup", href: "https://github.com/kacytran1122/selakata/blob/main/packages/sdk/docs/segmentation.md" },
+      { label: "Annotated corpus", href: "https://github.com/kacytran1122/selakata/blob/main/packages/sdk/bench/data/corpus.json" },
+    ],
+  },
+  {
+    title: "Project",
+    links: [
+      { label: "GitHub", href: "https://github.com/kacytran1122/selakata" },
+      { label: "Self-hosting", href: "https://github.com/kacytran1122/selakata/blob/main/DEPLOY.md" },
+      { label: "Report a locale bug", href: "https://github.com/kacytran1122/selakata/issues/new" },
+      { label: "MIT licence", href: "https://github.com/kacytran1122/selakata/blob/main/LICENSE" },
+    ],
+  },
+];
+---
+
+<footer class="foot">
+  <div class="shell">
+    <div class="foot__top">
+      <div class="foot__brand">
+        <a class="brand" href="/">
+          <span class="brand__mark" aria-hidden="true"></span>
+          <span>selakata</span>
+        </a>
+        <p class="foot__blurb">
+          Malay and Indonesian: <em>sela</em>, a gap, and <em>kata</em>, a word.
+          The space between words — the thing Thai, Khmer, Lao, and Burmese never
+          write down, and the thing this package has to infer before it can wrap a
+          line, count a noun, or search a string.
+        </p>
+      </div>
+
+      <div class="foot__cols">
+        {
+          columns.map((col) => (
+            <nav class="foot__col" aria-label={col.title}>
+              <h3>{col.title}</h3>
+              <ul>
+                {col.links.map((l) => (
+                  <li>
+                    <a href={l.href} rel={l.href.startsWith("http") ? "noopener" : undefined}>
+                      {l.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))
+        }
+      </div>
+    </div>
+
+    <div class="foot__bar">
+      <span>MIT licensed. No account required, no telemetry, no network calls.</span>
+      <span lang="th" class="foot__script">12 ประเทศ · 29 locales</span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .foot {
+    border-top: 1px solid var(--seam);
+    padding-block: 64px 28px;
+    background: var(--void);
+  }
+
+  .foot__top {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(0, 1.35fr);
+    gap: 48px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    font-size: 1.02rem;
+  }
+
+  .brand__mark {
+    width: 1px;
+    height: 17px;
+    background: var(--jade);
+    box-shadow: 0 0 9px var(--jade-glow);
+  }
+
+  .foot__blurb {
+    margin-top: 16px;
+    max-width: 46ch;
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.7;
+  }
+
+  .foot__blurb em {
+    color: var(--text);
+    font-style: italic;
+  }
+
+  .foot__cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 32px;
+  }
+
+  .foot__col h3 {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+
+  .foot__col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 9px;
+  }
+
+  .foot__col a {
+    font-size: 0.9rem;
+    color: var(--muted);
+    transition: color 0.18s var(--step);
+  }
+
+  .foot__col a:hover {
+    color: var(--jade);
+  }
+
+  .foot__bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    justify-content: space-between;
+    margin-top: 52px;
+    padding-top: 22px;
+    border-top: 1px solid var(--seam);
+    font-size: 0.84rem;
+    color: var(--faint);
+  }
+
+  .foot__script {
+    font-family: var(--thai);
+  }
+
+  @media (max-width: 820px) {
+    .foot__top {
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+  }
+</style>
