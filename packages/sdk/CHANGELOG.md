@@ -3,6 +3,13 @@
 All notable changes to `selakata` are documented here. This project follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-08-19
+
+### Changed
+
+- Rewrote the npm README in plain language so non-technical readers can quickly
+  understand the problem selakata solves and the value it provides.
+
 ## [0.1.0] - 2026-08-18
 
 Initial release.
@@ -27,4 +34,5 @@ Initial release.
 - React bindings at `selakata/react` and a Node entry at `selakata/server`.
 - `sela` CLI: `init`, `lint`, and `readiness`.
 
+[0.1.1]: https://github.com/kacytran1122/npm_package-main/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/kacytran1122/npm_package-main/releases/tag/v0.1.0

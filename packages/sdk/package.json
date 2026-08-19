@@ -1,6 +1,6 @@
 {
   "name": "selakata",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Internationalization built for Southeast Asia: 12 countries, 29 locales, numeral classifiers, Buddhist Era dates, Zawgyi detection, and line breaking for unspaced scripts.",
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,9 @@
     "url": "git+https://github.com/kacytran1122/npm_package-main.git",
     "directory": "packages/sdk"
   },
-  "bugs": { "url": "https://github.com/kacytran1122/npm_package-main/issues" },
+  "bugs": {
+    "url": "https://github.com/kacytran1122/npm_package-main/issues"
+  },
   "sideEffects": false,
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,26 +23,53 @@
   },
   "exports": {
     ".": {
-      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     },
     "./react": {
-      "import": { "types": "./dist/react.d.ts", "default": "./dist/react.js" },
-      "require": { "types": "./dist/react.d.cts", "default": "./dist/react.cjs" }
+      "import": {
+        "types": "./dist/react.d.ts",
+        "default": "./dist/react.js"
+      },
+      "require": {
+        "types": "./dist/react.d.cts",
+        "default": "./dist/react.cjs"
+      }
     },
     "./server": {
-      "import": { "types": "./dist/server.d.ts", "default": "./dist/server.js" },
-      "require": { "types": "./dist/server.d.cts", "default": "./dist/server.cjs" }
+      "import": {
+        "types": "./dist/server.d.ts",
+        "default": "./dist/server.js"
+      },
+      "require": {
+        "types": "./dist/server.d.cts",
+        "default": "./dist/server.cjs"
+      }
     },
     "./package.json": "./package.json"
   },
   "typesVersions": {
     "*": {
-      "react": ["./dist/react.d.ts"],
-      "server": ["./dist/server.d.ts"]
+      "react": [
+        "./dist/react.d.ts"
+      ],
+      "server": [
+        "./dist/server.d.ts"
+      ]
     }
   },
-  "files": ["dist", "README.md", "CHANGELOG.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "node --test test/*.test.js",
@@ -51,18 +80,38 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
-    "i18n", "internationalization", "l10n", "southeast-asia", "asean",
-    "vietnamese", "thai", "indonesian", "malay", "filipino", "khmer",
-    "burmese", "lao", "tetum", "jawi", "zawgyi", "classifier",
-    "buddhist-era", "line-breaking", "react"
+    "i18n",
+    "internationalization",
+    "l10n",
+    "southeast-asia",
+    "asean",
+    "vietnamese",
+    "thai",
+    "indonesian",
+    "malay",
+    "filipino",
+    "khmer",
+    "burmese",
+    "lao",
+    "tetum",
+    "jawi",
+    "zawgyi",
+    "classifier",
+    "buddhist-era",
+    "line-breaking",
+    "react"
   ],
   "peerDependencies": {
     "react": ">=18"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true }
+    "react": {
+      "optional": true
+    }
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/react": "^18.3.0",

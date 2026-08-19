@@ -1,440 +1,228 @@
 # selakata
 
-Internationalization built for Southeast Asia.
+[![npm version](https://img.shields.io/npm/v/selakata.svg)](https://www.npmjs.com/package/selakata)
+[![CI](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml/badge.svg)](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/LICENSE)
 
-`selakata` covers 12 countries and 29 locales. It handles the things general
-i18n libraries leave to your application: numeral classifiers, politeness that
-changes with the speaker, Buddhist Era dates, Zawgyi detection, line breaking
-for scripts without spaces, and names that have no surname.
+**Make your app feel at home in Southeast Asia.**
 
-It has no runtime dependencies. React is optional.
+Translation is more than replacing English words with words from another
+language. An app can use the correct words and still feel wrong to the people
+reading them.
+
+- A Thai date may show the year 2026 when people expect 2569.
+- A Vietnamese count may say “2 mèo” instead of the natural “2 con mèo.”
+- A Burmese person may be forced to enter a surname they do not have.
+- Thai, Lao, Khmer, or Burmese text may run off the screen because there are no
+  spaces between words.
+- Jawi text may flow in the wrong direction.
+
+Selakata handles these local details for your app.
+
+It supports **12 countries** and **29 language or regional variants**, including
+everyday mixed language such as Singlish, Taglish, Manglish, and bahasa gaul.
+
+## See the difference
+
+| What can go wrong                                 | What selakata does                           |
+| ------------------------------------------------- | -------------------------------------------- |
+| Thai dates use the wrong year                     | Uses the Buddhist calendar when appropriate  |
+| Counting sounds unnatural                         | Adds the counting word people expect         |
+| A name form requires a surname                    | Returns name fields that fit the culture     |
+| Text without spaces cannot wrap                   | Finds safe places to break the line          |
+| Old Burmese text looks broken                     | Detects and converts Zawgyi text             |
+| Jawi reads from the wrong side                    | Returns the correct right-to-left direction  |
+| An app always sounds too formal or too casual     | Supports formal, normal, and casual language |
+| A Thai message speaks as the wrong speaker gender | Handles the correct politeness ending        |
+
+Selakata does **not** write translations for you. It helps the translations you
+already have behave naturally inside a real product.
+
+## Try it
+
+Install the library:
 
 ```bash
 npm install selakata
 ```
 
-## Why this exists
+Then use only the helpers you need:
 
-Most i18n libraries were designed around European languages. They assume words
-are separated by spaces, that plural means "add an s", and that every person
-has a first name and a last name. None of that holds across this region.
+```js
+import {
+  formatCount,
+  formatCurrency,
+  formatDate,
+  withPoliteness,
+} from "selakata";
 
-Here is what breaks in practice.
+formatCount(2, "mèo", { locale: "vi", category: "animal" });
+// "2 con mèo"
 
-| Problem | What goes wrong | What this package does |
-| --- | --- | --- |
-| Thai, Lao, Khmer, and Burmese have no spaces | Text overflows its container because the browser finds no place to wrap | `insertLineBreakOpportunities()` |
-| Counting needs a classifier | "2 mèo" reads as broken Vietnamese | `formatCount()` |
-| Thai politeness marks the speaker's gender | Hardcoding ครับ makes your product speak as a man | `politeParticle()` |
-| Myanmar has two incompatible encodings | Zawgyi text renders as noise for Unicode readers | `detectMyanmarEncoding()` |
-| Thailand uses Buddhist Era | Your date says 2026, every Thai form says 2569 | Buddhist calendar by default for `th` |
-| Vietnamese has two Unicode spellings per word | Search and sort silently fail | `normalizeVietnamese()`, `toSearchKey()` |
-| Burmese names have no surname | Your form rejects a valid legal name | `nameFields()` |
-| Jawi is right to left | A Malay app supporting Jawi needs real RTL | `dir` on every locale |
-
-## Quick start
-
-```ts
-import { createI18n } from "selakata";
-
-const i18n = createI18n({
-  locale: "vi",
-  register: "formal",
-  bundles: {
-    vi: {
-      greeting: { formal: "Chào quý khách", casual: "Chào cậu" },
-      cart: "Giỏ hàng của bạn",
-    },
-    en: { greeting: "Hello", cart: "Your cart" },
-  },
-});
-
-i18n.t("greeting");                                  // "Chào quý khách"
-i18n.currency(1500000);                              // "1.500.000 ₫"
-i18n.count(2, "mèo", { category: "animal" });        // "2 con mèo"
-i18n.pronoun("you");                                 // "quý khách"
-```
-
-## Coverage
-
-Twelve countries. The eleven sovereign states of Southeast Asia, plus Papua New
-Guinea on the eastern edge, which holds ASEAN observer status. If your
-definition of the region excludes it, ignore the `PG` entry.
-
-| Country | Currency | Locales |
-| --- | --- | --- |
-| Brunei | BND | `ms-BN`, `ms-Arab-BN`, `en` |
-| Cambodia | KHR | `km`, `en` |
-| Indonesia | IDR | `id`, `jv`, `jv-Java`, `su`, `id-x-gaul`, `en` |
-| Laos | LAK | `lo`, `en` |
-| Malaysia | MYR | `ms`, `ms-Arab`, `ms-x-manglish`, `en` |
-| Myanmar | MMK | `my`, `shn`, `en` |
-| Philippines | PHP | `fil`, `ceb`, `fil-x-taglish`, `en` |
-| Singapore | SGD | `en-SG`, `zh-Hans-SG`, `ms-SG`, `ta-SG`, `en-SG-x-singlish` |
-| Thailand | THB | `th`, `en` |
-| Timor-Leste | USD | `tet`, `pt-TL`, `en` |
-| Vietnam | VND | `vi`, `en` |
-| Papua New Guinea | PGK | `tpi`, `en-PG`, `en` |
-
-Code-mixed locales are first class. Taglish, Singlish, Manglish, and bahasa
-gaul are how people actually write. They are proper locales here, not broken
-versions of something else, and each falls back to its base language.
-
-## Fallback chains
-
-A missing key does not jump straight to English. It walks a chain that reflects
-what people in the region actually read.
-
-```
-jv  -> id  -> en      Javanese speakers all read Indonesian
-su  -> id  -> en
-lo  -> th  -> en      Lao and Thai are close, and Thai media is everywhere
-shn -> my  -> en
-ceb -> fil -> en
-tet -> pt-TL -> en    Portuguese is co-official in Timor-Leste
-ms-Arab -> ms -> en   Same language, different script
-```
-
-```ts
-import { negotiateLocale, fallbackChain } from "selakata";
-
-fallbackChain("lo");                      // ["lo", "th", "en"]
-negotiateLocale(["jv"], ["id", "en"]);    // "id"
-```
-
-## Numeral classifiers
-
-You cannot say "2 cats" in Vietnamese, Thai, Khmer, Lao, or Burmese. You say
-the equivalent of "2 CLF cat" or "cat 2 CLF". The classifier depends on what
-kind of thing the noun is, and the word order depends on the language.
-
-```ts
-import { formatCount } from "selakata";
-
-formatCount(2, "mèo", { locale: "vi", category: "animal" });   // "2 con mèo"
-formatCount(2, "แมว", { locale: "th", category: "animal" });   // "แมว 2 ตัว"
-formatCount(3, "buku", { locale: "id", category: "book" });    // "3 buah buku"
-formatCount(3, "libro", { locale: "fil" });                    // "3 na libro"
-
-formatCount(2, "แมว", { locale: "th", category: "animal", nativeDigits: true });
-// "แมว ๒ ตัว"
-```
-
-Categories: `person`, `animal`, `thing`, `book`, `vehicle`, `flat`, `long`,
-`round`, `building`, `plant`, `pair`, `cloth`.
-
-## Politeness and register
-
-Every message can have `formal`, `neutral`, and `casual` variants. Javanese
-speech levels (krama, madya, ngoko) map onto the same scale.
-
-```ts
-import { pronoun, politeParticle, withPoliteness } from "selakata";
-
-pronoun("vi", "you", { register: "formal" });   // "quý khách"
-pronoun("jv", "you", { register: "formal" });   // "panjenengan"
-pronoun("th", "i", { speakerGender: "female" }); // "ดิฉัน"
-```
-
-In Thai, Burmese, and Khmer the polite sentence-final particle marks the
-gender of the **speaker**, not the listener. An app speaking in its own voice
-has to make a choice.
-
-```ts
-politeParticle("th", { speakerGender: "male" });                        // "ครับ"
-politeParticle("th", { speakerGender: "female" });                      // "ค่ะ"
-politeParticle("th", { speakerGender: "female", sentenceType: "question" }); // "คะ"
-politeParticle("th", { speakerGender: "neutral" });                     // null
-```
-
-That last one returns `null` on purpose. Thai has no neutral polite particle.
-The API says so instead of guessing for you.
-
-## Numbers, money, and dates
-
-```ts
-import { formatCurrency, formatDate, toNativeDigits } from "selakata";
-
-formatCurrency(1500000, "vi");   // "1.500.000 ₫"   no decimals
-formatCurrency(50000, "id");     // "Rp 50.000"     no decimals
-formatCurrency(2500, "th");      // "฿2,500.00"
-
-toNativeDigits("2569", "th");    // "๒๕๖๙"
-toNativeDigits("2026", "my");    // "၂၀၂၆"
+formatCurrency(1500000, "vi");
+// "1.500.000 ₫"
 
 formatDate(new Date(), "th", { dateStyle: "long" });
-// "18 สิงหาคม 2569"   Buddhist Era, the default for Thai
+// Thai date with the Buddhist year
 
-formatDate(new Date(), "th", { dateStyle: "long", calendar: "gregory" });
-// "18 สิงหาคม 2026"
+withPoliteness("ขอบคุณ", "th", { speakerGender: "female" });
+// "ขอบคุณ ค่ะ"
 ```
 
-The dong, rupiah, riel, kip, and kyat are quoted whole. Nobody writes
-`1.500.000,00 ₫` on a receipt.
+The library has no required runtime dependencies. React support is optional.
 
-## Text without spaces
+## What you get
 
-```ts
-import { words, wordCount, truncate, insertLineBreakOpportunities } from "selakata";
+- Local dates, money, numbers, and number symbols.
+- Natural counting words for Vietnamese, Thai, Khmer, Burmese, Lao,
+  Indonesian, Malay, and Filipino.
+- Formal, normal, and casual ways of speaking.
+- Thai politeness that follows the speaker.
+- Safe line wrapping for writing systems that do not use spaces.
+- Vietnamese text cleanup for search, sorting, and URLs.
+- Burmese Zawgyi detection and conversion.
+- Right-to-left support for Jawi.
+- Name forms that do not assume everyone has a first and last name.
+- Sensible language fallbacks based on what people in the region can read.
+- A command-line checker that catches common mistakes before release.
 
-words("ฉันรักภาษาไทย", "th");     // ["ฉัน", "รัก", "ภาษา", "ไทย"]
-wordCount("ฉันรักภาษาไทย", "th"); // 4
-truncate("ฉันรักภาษาไทยมาก", "th", 8);       // "ฉันรักภาษา…"
-insertLineBreakOpportunities("ฉันรักภาษาไทย", "th"); // adds zero-width spaces
-```
-
-Prefer CSS `word-break: auto-phrase` where you can. Use
-`insertLineBreakOpportunities()` for the places you cannot, such as SVG text,
-canvas, and PDF generation.
-
-This runs on the package's own segmenter, not on `Intl.Segmenter`. The engine
-is a rule-based orthographic cluster layer with a unigram Viterbi word search
-on top of it, and it is the reason the SDK works on Hermes and inside
-`small-icu` builds at all. It also scores higher: **96.9 macro boundary F1 on
-held-out data against `Intl.Segmenter`'s 93.5**, and it returns the same answer
-on every runtime, where `Intl.Segmenter` changed its answer on 8.6% of the
-corpus between ICU 76 and ICU 78. The full evaluation, including where it
-loses, is in [`docs/segmentation.md`](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/docs/segmentation.md).
-
-Two knobs:
-
-```ts
-import { registerWords, setSegmentationEngine, orthographicEngine } from "selakata";
-
-// Teach it your product vocabulary. Takes effect immediately.
-registerWords("th", ["เซลากาตะ"]);
-
-// Or drop the lexicon entirely: 2.3 KB gzipped instead of 10 KB, still safe
-// to break and truncate on, but word counts get coarse.
-setSegmentationEngine(orthographicEngine);
-```
-
-## Myanmar encoding
-
-Zawgyi and Unicode use the same Unicode block with different meanings. They
-look identical in the wrong font and turn to noise in the right one. A large
-share of Burmese text on the open web is still Zawgyi.
-
-```ts
-import { detectMyanmarEncoding, normalizeMyanmar } from "selakata";
-
-detectMyanmarEncoding(input);
-// { encoding: "zawgyi", confidence: 0.75, signals: ["medial stored before its consonant"] }
-
-normalizeMyanmar(input); // converts only if it looks like Zawgyi
-```
-
-Conversion is best effort. It handles ordinary Burmese prose including medials,
-stacked consonants, kinzi, and the reordered e-vowel. For archival work where
-losses are unacceptable, use Google's `myanmar-tools`.
-
-## Vietnamese text
-
-```ts
-import { normalizeVietnamese, foldVietnamese, slugifyVietnamese, fromTelex } from "selakata";
-
-normalizeVietnamese(input);          // NFC, so comparisons work
-foldVietnamese("Đà Nẵng");           // "Da Nang"
-slugifyVietnamese("Hồ Chí Minh");    // "ho-chi-minh"
-fromTelex("Vieejt");                 // "Việt"
-```
-
-## Names
-
-```ts
-import { nameFields, formatName } from "selakata";
-
-nameFields("MM");
-// one required field, labelled "Name". Burmese names have no family name.
-
-nameFields("ID");
-// family name present but not required. Many Indonesians are legally mononymous.
-
-formatName({ family: "Nguyễn", middle: "Văn", given: "An" }, "VN");
-// "Nguyễn Văn An"
-
-formatName({ given: "Ahmad", patronymic: "bin", family: "Ismail" }, "MY");
-// "Ahmad bin Ismail"
-```
-
-## React
+## Use it with React
 
 ```tsx
-import { I18nProvider, useTranslation, Trans, LanguageSwitcher } from "selakata/react";
+import { I18nProvider, useTranslation } from "selakata/react";
 
 function App() {
-  const [locale, setLocale] = useState("th");
-
   return (
-    <I18nProvider locale={locale} bundles={bundles} register="formal">
-      <LanguageSwitcher onChange={setLocale} />
-      <Content />
+    <I18nProvider locale="th" bundles={bundles} speakerGender="female">
+      <Checkout />
     </I18nProvider>
   );
 }
 
-function Content() {
+function Checkout() {
   const { t, currency, count } = useTranslation();
 
   return (
-    <div>
-      <Trans id="hero.title" />
+    <>
+      <h1>{t("checkout.title")}</h1>
       <p>{currency(2500)}</p>
       <p>{count(3, "หนังสือ", { category: "book" })}</p>
-    </div>
+    </>
   );
 }
 ```
 
-The provider sets `lang` and `dir` on the document, loads the right Google Font
-for the script, and `<Trans>` adds break opportunities for unspaced scripts.
+The provider updates the page language and reading direction. It also adds safe
+line-break opportunities for writing systems without spaces.
 
-## Server and SSR
-
-`selakata/server` has no React and no DOM, so it is safe in React Server
-Components, middleware, and edge runtimes.
+For server components, middleware, and other code without a browser, use
+`selakata/server`:
 
 ```ts
-import { localeFromRequest, htmlAttributes } from "selakata/server";
+import { htmlAttributes, localeFromRequest } from "selakata/server";
 
 const locale = localeFromRequest({
-  cookie: cookies.get("locale"),
-  country: headers.get("cf-ipcountry"),
-  acceptLanguage: headers.get("accept-language"),
-  available: ["th", "vi", "id", "en"],
+  acceptLanguage: request.headers.get("accept-language"),
+  country: request.headers.get("cf-ipcountry"),
 });
 
-const { lang, dir } = htmlAttributes(locale);
+htmlAttributes(locale); // for example: { lang: "ms-Arab", dir: "rtl" }
 ```
 
-Country beats `Accept-Language` on purpose. A phone bought in Cambodia often
-reports `en-US` while its owner reads Khmer.
+React Native is supported too. Browser-only behaviour quietly does nothing
+instead of crashing.
 
-## Fonts
+## Check your translations before launch
 
-The default system font on most devices has no glyphs for Khmer, Burmese, Lao,
-or Javanese, and clips Thai and Vietnamese diacritics at normal line heights.
+The package includes a command named `sela`.
 
-```ts
-import { fontLinkHref, fontFaceCss } from "selakata";
+| Command                            | What it means                               |
+| ---------------------------------- | ------------------------------------------- |
+| `npx sela init --country VN`       | Start a translation folder for one country  |
+| `npx sela lint --dir locales`      | Find common language mistakes               |
+| `npx sela readiness --dir locales` | See which languages are ready for customers |
+| `npx sela info th`                 | Show what selakata knows about Thai         |
 
-fontLinkHref(["th", "km", "my"]);  // one Google Fonts URL
-fontFaceCss(["th", "km", "my"]);   // per-language stack, line height, and direction
-```
+“100% translated” does not always mean “ready.” Text may still be unreviewed,
+sound too casual, or contain an old Burmese encoding.
 
-## CLI
+The readiness score asks four simple questions:
+
+| Question                                  | Weight |
+| ----------------------------------------- | -----: |
+| Is every message translated?              |    35% |
+| Are the needed politeness levels present? |    25% |
+| Does the mistake checker pass?            |    25% |
+| Did a person review the text?             |    15% |
 
 ```bash
-npx sela init --country VN     # scaffold locale files and a config
-npx sela lint --strict         # check bundles for regional mistakes
-npx sela readiness             # release readiness score per locale
-npx sela info TH               # what this package knows about a country
+npx sela readiness --dir locales --verbose --strict
 ```
 
-`lint` catches the errors that survive review because the reviewer cannot read
-the script:
+With `--strict`, the command fails when a language is not ready. This lets your
+automatic release process stop before customers see unfinished text.
 
-```
-th (Thai)
-  warn   app.tagline  [gendered-particle]
-         Hardcoded Thai polite particle. This makes your product speak as a
-         specific gender. Use withPoliteness() so it stays configurable.
-  warn   cart  [missing-classifier]
-         Thai needs a numeral classifier between the count and the noun.
-```
+## Countries and languages
 
-Rules: `zawgyi-encoding`, `vietnamese-nfc`, `gendered-particle`,
-`hardcoded-plural`, `missing-classifier`, `no-break-opportunity`,
-`hardcoded-currency`, `missing-placeholder`, `unknown-placeholder`,
-`missing-key`, `untranslated`, `empty-value`.
+| Country          | Included language and regional variants                                |
+| ---------------- | ---------------------------------------------------------------------- |
+| Brunei           | Malay, Jawi Malay, English                                             |
+| Cambodia         | Khmer, English                                                         |
+| Indonesia        | Indonesian, Javanese, Javanese script, Sundanese, bahasa gaul, English |
+| Laos             | Lao, English                                                           |
+| Malaysia         | Malay, Jawi Malay, Manglish, English                                   |
+| Myanmar          | Burmese, Shan, English                                                 |
+| Philippines      | Filipino, Cebuano, Taglish, English                                    |
+| Singapore        | English, Chinese, Malay, Tamil, Singlish                               |
+| Thailand         | Thai, English                                                          |
+| Timor-Leste      | Tetum, Portuguese, English                                             |
+| Vietnam          | Vietnamese, English                                                    |
+| Papua New Guinea | Tok Pisin, English                                                     |
 
-## Release readiness
+Papua New Guinea is included as an additional regional entry. If it is outside
+your definition of Southeast Asia, simply ignore the `PG` entries.
 
-`readiness` answers the question coverage cannot: is this locale shippable? It
-scores four facets that fail independently and weights them into one number out
-of 100.
+## Helpful language fallbacks
 
-| Facet | Weight | What it measures |
-| --- | --- | --- |
-| `translated` | 35% | The keys exist at all |
-| `registerDepth` | 25% | They exist at every register the language distinguishes |
-| `lintClean` | 25% | They survive the rules above |
-| `reviewed` | 15% | A human signed off, not just the model |
+When a translation is missing, selakata does not always jump straight to
+English. It first tries a language the reader is more likely to understand.
 
-A locale that is 100% translated but entirely machine-drafted scores 85, not
-100. A locale whose Thai exists only in the neutral register loses two thirds
-of the register facet, because the formal screens have nothing to render.
-
-Register depth is measured against the language rather than a fixed three, so
-bahasa gaul is held to neutral and casual and is not penalised for having no
-formal register. Lint density is per translated key, and `missing-key` and
-`untranslated` are excluded from the lint facet because `translated` has
-already priced them in.
-
-```ts
-import { readinessFromBundles, scoreReadiness } from "selakata";
-
-// From JSON bundles, for CI.
-const report = readinessFromBundles({ en, vi, th, km }, "en", 75);
-report.score;             // 63
-report.grade;             // "C"
-report.blocking;          // ["km", "th"]
-report.locales[0].topDrag // the facet costing the most points, with a reason
-
-// Or from your own counts, if translations live somewhere else.
-scoreReadiness({
-  locale: "th",
-  totalKeys: 200,
-  translatedKeys: 200,
-  filledRegisterSlots: 600,
-  issues: [],
-  draftKeys: 200,
-}).score; // 85 -- fully translated, wholly unreviewed
+```text
+Javanese  → Indonesian → English
+Lao       → Thai       → English
+Cebuano   → Filipino   → English
+Shan      → Burmese    → English
+Jawi      → Malay      → English
 ```
 
-Everything is pure arithmetic over counts. Nothing reads the network, a
-database, or the clock, so the same project always scores the same.
+You can inspect or change these choices through the public API.
 
-## Scope and honesty
+## What to double-check
 
-Some things here are exact and some are best effort. The difference matters, so
-it is stated plainly.
+Selakata contains rules and common language patterns, but language is shaped by
+people, place, age, and context.
 
-**Exact.** Locale metadata, currency handling, calendars, plural rules, and
-Vietnamese normalization all sit on CLDR and `Intl`, which ship with every
-current runtime. These are lookups with a published right answer, so delegating
-them is correct and reimplementing them could only introduce drift.
+- Counting words, pronouns, and politeness cover common use, not every dialect.
+- Zawgyi conversion and automatic Jawi spelling cannot be perfect in every
+  document.
+- The built-in word splitter is measured on test sentences, but unusual names
+  and new words can still need help.
 
-**Measured.** Segmentation is this package's own, because it is a judgement
-rather than a lookup, and because the platform's answer is unavailable on some
-targets and version-dependent on the rest. It is evaluated against a
-hand-annotated corpus with a held-out split; the numbers, the method, and the
-limitations are in [`docs/segmentation.md`](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/docs/segmentation.md).
+Have a native speaker review important customer-facing text. If you find a
+mistake, please [open an issue](https://github.com/kacytran1122/npm_package-main/issues).
 
-**Curated.** Classifier tables, pronouns, and politeness particles are compiled
-by hand. They cover common usage. They are not a full grammar, and a native
-reviewer should still check your final copy.
+## More information
 
-**Best effort.** Zawgyi conversion and Jawi transliteration are approximate by
-nature. Both are documented as such at the call site. Jawi orthography in
-particular varies by publisher and drops vowels in ways no character map can
-capture.
+- [GitHub project](https://github.com/kacytran1122/npm_package-main)
+- [Complete word-splitting evaluation](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/docs/segmentation.md)
+- [Changes in each version](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/CHANGELOG.md)
 
-This package does not translate text. It has no AI, no server, and no
-dashboard. It formats, validates, and gets out of the way.
+## Why the name?
 
-## Prior art
+In Malay and Indonesian, _sela_ means a gap and _kata_ means a word.
+**Selakata** is the space between words—the space that Thai, Khmer, Lao, and
+Burmese often do not write, but software still needs to understand.
 
-The idea and the shape of the API are borrowed from
-[BhashaJS](https://github.com/thesantoshpant/bhashajs), which does this for
-South Asia. The linguistic problems are entirely different, so the
-implementation shares no code.
+## Licence
 
-The name is Malay and Indonesian: *sela*, a gap or interval, and *kata*, a
-word. **Selakata** is the space between words — the thing Thai, Khmer, Lao, and
-Burmese never write down, and the thing this package has to infer before it can
-wrap a line, count a noun, or search a string.
-
-## License
-
-MIT
+MIT. Use it for personal or commercial projects.
