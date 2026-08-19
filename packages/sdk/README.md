@@ -4,7 +4,7 @@
 [![CI](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml/badge.svg)](https://github.com/kacytran1122/npm_package-main/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen.svg)](https://github.com/kacytran1122/npm_package-main/blob/main/packages/sdk/LICENSE)
 
-**Make your app feel at home in Southeast Asia.**
+**Help your app feel natural in Southeast Asia.**
 
 Translation is more than replacing English words with words from another
 language. An app can use the correct words and still feel wrong to the people
@@ -220,8 +220,8 @@ mistake, please [open an issue](https://github.com/kacytran1122/npm_package-main
 ## Why the name?
 
 In Malay and Indonesian, _sela_ means a gap and _kata_ means a word.
-**Selakata** is the space between words—the space that Thai, Khmer, Lao, and
-Burmese often do not write, but software still needs to understand.
+**Selakata** is the space between words. Thai, Khmer, Lao, and Burmese often do
+not write that space, but software still needs to understand it.
 
 ## Licence
 

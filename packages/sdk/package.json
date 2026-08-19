@@ -1,6 +1,6 @@
 {
   "name": "selakata",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Internationalization built for Southeast Asia: 12 countries, 29 locales, numeral classifiers, Buddhist Era dates, Zawgyi detection, and line breaking for unspaced scripts.",
   "type": "module",
   "license": "MIT",

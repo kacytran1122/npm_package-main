@@ -7,7 +7,7 @@
 [![Locales](https://img.shields.io/badge/locales-29-2fd3b4.svg)](#every-language-we-support)
 [![Countries](https://img.shields.io/badge/countries-12-2fd3b4.svg)](#every-language-we-support)
 
-**Make your app feel at home in Southeast Asia.**
+**Help your app feel natural in Southeast Asia.**
 
 Most translation tools can replace English words with Thai, Vietnamese, Malay,
 or Burmese words. That is only the first step.
@@ -233,7 +233,7 @@ keep temporary data in memory for local testing. For production deployment,
 database setup, environment variables, Docker, HTTPS, backups, and upgrades,
 see [DEPLOY.md](DEPLOY.md).
 
-## What to trust—and what to double-check
+## What to trust and what to double-check
 
 Some answers are exact:
 
@@ -243,9 +243,9 @@ Some answers are exact:
 - Vietnamese spelling normalisation.
 
 Some answers are measured. The built-in word splitter was tested on
-hand-marked sentences and scored **96.9 macro boundary F1**—a score for how
-often it found the correct word breaks—compared with **93.5** for the browser
-across the same evaluation. The full method and its weak spots are in
+hand-marked sentences and scored **96.9 macro boundary F1**. This score measures
+how often it found the correct word breaks. The browser scored **93.5** in the
+same evaluation. The full method and its weak spots are in
 [the segmentation report](packages/sdk/docs/segmentation.md).
 
 Some answers are hand-written or approximate:
@@ -254,14 +254,14 @@ Some answers are hand-written or approximate:
 - Zawgyi conversion and automatic Jawi spelling cannot be perfect in every document.
 
 Have a native speaker review important customer-facing text. If you find a
-mistake, please open an issue—it is a bug, not something users should work
+mistake, please open an issue. It is a bug, not something users should work
 around.
 
 ## Why the name?
 
 In Malay and Indonesian, _sela_ means a gap and _kata_ means a word.
-**Selakata** is the space between words—the space that Thai, Khmer, Lao, and
-Burmese often do not write, but software still needs to understand.
+**Selakata** is the space between words. Thai, Khmer, Lao, and Burmese often do
+not write that space, but software still needs to understand it.
 
 The project was inspired by
 [BhashaJS](https://github.com/thesantoshpant/bhashajs), which solves a similar
